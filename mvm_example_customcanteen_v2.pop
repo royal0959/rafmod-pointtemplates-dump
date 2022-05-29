@@ -1,0 +1,355 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 0
+
+	PointTemplates
+	{
+		CustomCanteens
+		{
+			OnSpawnOutput
+			{
+				Target "canteen_input"
+				Action "FireUser1"
+                Delay 0.1
+			}
+
+            OnSpawnOutput
+            {
+                Target "@c@!activator"
+                Action "$SetProp$m_usNumCharges"
+                Param 0
+                Delay 0
+            }
+
+            OnSpawnOutput
+            {
+                Target "!activator"
+                Action "$SetVar$currentCustomCanteenCharges"
+                Param 0
+                Delay 0
+            }
+
+            logic_compare
+            {
+                //check if m_usNumCharges is different from currentCustomCanteenCharges variable
+                "targetname" "canteen_input_used_check"
+
+                "CompareValue" "69420" //to be set later
+
+                "OnLessThan" "canteen_owned_check,TestActivator,,0,-1"
+            }
+
+            logic_compare
+            {
+                "targetname" "sanitize_canteen_input"
+
+                "CompareValue" "6900"
+                
+                //"OnLessThan" "player,$DisplayTextChat,,0,-1"
+                "OnLessThan" "canteen_input_used_check,SetCompareValue,$$=!activator.currentCustomCanteenCharges,0,-1"
+                "OnLessThan" "canteen_input_used_check,SetValueCompare,,0.01,-1"
+            }
+
+            logic_relay 
+            {
+                "targetname" "canteen_input"
+
+                //since $getprop with @c@ work like an index loop doing the applied output on every child and default to a set value if the prop index doesn't exist 
+                //I can hook it to a logic_compare and see if the input is different from the default value
+                "OnUser1" "@c@!activator,$GetProp$m_usNumCharges,sanitize_canteen_input|SetValueCompare|6900,0,-1"
+
+                "OnUser1" "!self,FireUser1,,0.2,-1"
+            }
+            
+            logic_case
+            {
+                //change custom charge attribute (limited quantity item) to sync with upgrade station
+                "targetname" "custom_charge_decrease"
+                "case16" "limited quantity item|%"
+                "case01" "0"
+
+                "ondefault" "!activator,$AddPlayerAttribute,,0,-1"
+            }
+
+            logic_relay
+			{
+                //triggered after a successful custom canteen use
+				"targetname" "canteen_input_cooldown"
+				"spawnflags" "2"
+
+                "OnTrigger" "custom_charge_decrease,$SetKey$case01,$$=!activator.currentCustomCanteenCharges,0,-1"
+                "OnTrigger" "custom_charge_decrease,$Format,,0.1,-1"
+
+                "OnTrigger" "!activator,$SetVar$currentCustomCanteenCharges,$$=!activator.currentCustomCanteenCharges - 1,0,-1"
+                "OnTrigger" "@c@!activator,$SetProp$m_usNumCharges,$$=!activator.currentCustomCanteenCharges - 1,0,-1"
+                "OnTrigger" "player,$DisplayTextCenter,$$=!activator.currentCustomCanteenCharges - 1,0,-1"
+				
+                // "OnTrigger" "player,$DisplayTextChat,input cooldown,0,-1"
+                // "OnTrigger" "canteen_input,$CancelPending,,0,-1"
+                // "OnTrigger" "canteen_input,FireUser1,,5,-1" //cooldown
+                // "OnTrigger" "player,$DisplayTextChat,cooldown ended,4,-1"
+			}
+
+            $filter_variable
+			{
+                //check if player has any remaining canteen charges
+                "targetname" "canteen_owned_check"
+				"$name" "currentCustomCanteenCharges"
+				"$value" "0"
+				"$compare" "greater than"
+				"Negated" "0"
+
+                "OnPass" "canteen_effect,TestActivator,,0,-1"
+            }
+
+            filter_tf_condition
+			{
+				"targetname" "canteen_effect" //speed boost canteen
+				"Negated" "0"
+				"condition" "150"
+
+                "OnPass" "canteen_input_cooldown,Trigger,,0,-1"
+
+                "OnPass" "player,$DisplayTextChat,{red}{activator}{reset} has used their {9BBF4D}SPEED BOOST {reset}Power Up Canteen!,0,-1"
+                "OnPass" "!activator,$AddCond,32,0,-1"
+                "OnPass" "!activator,$RemoveCond,32,5,-1"
+			}
+
+            filter_activator_tfteam 
+			{
+				"targetname" "filter_is_blue"
+				"Negated" "0"
+				"TeamNum" "3"
+			}
+
+            $filter_sendprop
+			{
+                "targetname" "filter_is_not_giant"
+				"$name" "m_bIsMiniBoss"
+				"$value" "0"
+				"$compare" "equal"
+				"Negated" "0"
+            }
+
+            filter_multi 
+            {
+                "targetname" "filter_can_be_sapped"
+                "Negated" "0"
+                "FilterType" "0"
+                "Filter01" "filter_is_blue"
+                "Filter02" "filter_is_not_giant"
+            }
+
+
+            trigger_multiple
+            {
+                "targetname" "reprogram_canteen_apply"
+                "origin" "0 0 0"
+                "mins" "-300.0 -300.0 -300.0"
+                "maxs" "300.0 300.0 300.0"
+                "spawnflags" "1" 
+                "StartDisabled" "1"
+                "filtername" "filter_can_be_sapped"
+
+                "OnStartTouch" "!activator,$AddPlayerAttribute,receive friendly fire|1,0,-1"
+                "OnStartTouch" "!activator,$AddCond,43,0,-1"
+                "OnStartTouch" "!activator,$AddCond,50,0,-1"
+
+                "OnStartTouch" "!activator,$RemovePlayerAttribute,receive friendly fire,8,-1"
+                "OnStartTouch" "!activator,$RemoveCond,43,8,-1"
+                "OnStartTouch" "!activator,$RemoveCond,50,8,-1"
+                "OnStartTouch" "!activator,$Suicide,50,8,-1" //self-destruct bot after done reprogramming
+
+                "OnUser1" "!self,Enable,,0,-1"
+                "OnUser1" "!self,Disable,,0.01,-1"
+            }
+
+            info_particle_system
+            {
+                "targetname" "sapper_effect"
+                "effect_name" "Explosion_ShockWave_01"
+                "flag_as_weather" "0"
+                "start_active" "0"
+            }
+
+			filter_tf_condition
+			{
+				"targetname" "canteen_effect" //reprogram canteen
+				"Negated" "0"
+				"condition" "151"
+
+                "OnPass" "player,$DisplayTextChat,{red}{activator}{reset} has used their {9BBF4D}REPROGRAM {reset}Power Up Canteen!,0,-1"
+                "OnPass" "sapper_effect,Stop,,0,-1" 
+                "OnPass" "sapper_effect,Start,,0.01,-1" 
+                "OnPass" "reprogram_canteen_apply,FireUser1,,0,-1" 
+
+                "OnPass" "canteen_input_cooldown,Trigger,,0,-1"
+			}
+		}
+
+        CanteenPurchase 
+        {
+            NoFixup 1
+
+            logic_relay 
+            {
+                "targetname" "canteen_count_update"
+                "spawnflags" "2"
+
+                "$OnUser5" "@c@!activator,$SetProp$m_usNumCharges,,0,-1"
+                "$OnUser5" "!activator,$SetVar$currentCustomCanteenCharges,,0,-1"
+            }
+        }
+    }
+
+    SpawnTemplate CanteenPurchase
+
+	PlayerSpawnTemplate 
+	{
+		Name CustomCanteens
+		Origin "0 0 0" 
+	}
+
+	ExtendedUpgrades
+	{
+		//canteens
+		upgrade
+		{
+			Name "Speed Boost Canteen" 
+			Attribute "limited quantity item" 
+			Cap 3 
+			Increment 1 
+			Cost 50
+
+            PlayerUpgrade 1
+
+			//UIGroup 2 
+
+            // AllowedWeapons
+            // {
+            //     ItemName "Default Power Up Canteen (MvM)"
+            //     ItemName "Power Up Canteen (MvM)"
+            //     ItemName "Battery Canteens"
+            //     ItemName "Kritz Or Treat Canteen"
+            // }
+
+            // AllowedWeapons 
+			// {
+			// 	Slot "Action"
+			// }
+
+            // DisallowedWeapons
+			// {
+            //    Slot "Primary"
+            //    Slot "Secondary" 
+            //    Slot "Melee"
+			// }
+            
+            OnUpgrade
+            {
+                Output "canteen_count_update,$FireUser5,"
+                Output "!activator,$AddItemAttribute,special item description|Consumable: Consumable: Gain a speed boost for 5 seconds|9,0"
+                Output "!activator,$AddCond,150,0"
+            }
+
+            OnApply
+            {
+                Output "canteen_count_update,$FireUser5,"
+                Output "!activator,$AddItemAttribute,special item description|Consumable: Consumable: Gain a speed boost for 5 seconds|9,0"
+                Output "!activator,$AddCond,150,0"
+            }
+
+            // SecondaryAttributes 
+			// {
+			// 	"special item description" "Consumable: Gain a speed boost for 5 seconds"
+			// }
+		}
+
+        upgrade
+		{
+			Name "Reprogram Canteen" 
+			Attribute "limited quantity item" 
+			Cap 10
+			Increment 1 
+			Cost 5
+
+            PlayerUpgrade 1
+
+			//UIGroup 2 
+
+            OnUpgrade
+            {
+                Output "canteen_count_update,$FireUser5,"
+                Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
+                Output "!activator,$AddCond,151,0"
+            }
+
+            OnApply
+            {
+                Output "canteen_count_update,$FireUser5,"
+                Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
+                Output "!activator,$AddCond,151,0"
+            }
+
+            SecondaryAttributes 
+			{
+				//"special item description" "Consumable: Reprogram non-giant enemies in a radius"
+			}
+		}
+	}
+	Wave 
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+		
+		WaveSpawn
+		{
+			Where spawnbot
+			TotalCount 5
+			MaxActive 5
+			SpawnCount 5
+			WaitBeforeStarting 0.1
+			WaitBetweenSpawns 0
+			
+			TotalCurrency 0
+			
+			TFBot
+			{ 
+				Class Heavyweapons
+				Attributes SuppressFire
+			}
+		}
+
+		WaveSpawn
+		{
+			Where spawnbot
+			TotalCount 1
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			
+			TotalCurrency 0
+			
+			TFBot
+			{ 
+				Template T_TFBot_Giant_Heavyweapons
+				tag bot_giant
+				Attributes SuppressFire
+			}
+		}
+	}
+}
