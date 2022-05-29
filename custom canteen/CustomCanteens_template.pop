@@ -1,12 +1,5 @@
-		CustomCanteens
+        CustomCanteensSetup
 		{
-			OnSpawnOutput
-			{
-				Target "canteen_input"
-				Action "FireUser1"
-                Delay 0.1
-			}
-
             OnSpawnOutput
             {
                 Target "@c@!activator"
@@ -22,6 +15,32 @@
                 Param 0
                 Delay 0
             }
+        }
+
+		CustomCanteens
+		{
+			OnSpawnOutput
+			{
+				Target "canteen_input"
+				Action "FireUser1"
+                Delay 0.1
+			}
+
+            OnSpawnOutput
+            {
+                Target "@c@!activator"
+                Action "$SetProp$m_usNumCharges"
+                Param "$$=!activator.currentCustomCanteenCharges"
+                Delay 0
+            }
+
+            OnSpawnOutput
+			{
+                //sync attribute with previous life before being reapplied because onapply doesn't sync with this properly
+				Target "custom_charge_decrease"
+				Action "FireUser2"
+                Delay 0.1
+			}
 
             logic_compare
             {
@@ -30,6 +49,7 @@
 
                 "CompareValue" "69420" //to be set later
 
+                //"OnLessThan" "player,$DisplayTextChat,here,0,-1"
                 "OnLessThan" "canteen_owned_check,TestActivator,,0,-1"
             }
 
@@ -48,40 +68,45 @@
             {
                 "targetname" "canteen_input"
 
+                //"OnUser1" "player,$DisplayTextChat,used,0,-1"
                 //since $getprop with @c@ work like an index loop doing the applied output on every child and default to a set value if the prop index doesn't exist 
                 //I can hook it to a logic_compare and see if the input is different from the default value
                 "OnUser1" "@c@!activator,$GetProp$m_usNumCharges,sanitize_canteen_input|SetValueCompare|6900,0,-1"
+                //"OnUser1" "player,$DisplayTextChat,here,0,-1"
 
                 "OnUser1" "!self,FireUser1,,0.2,-1"
             }
-            
-            logic_case
-            {
-                //change custom charge attribute (limited quantity item) to sync with upgrade station
-                "targetname" "custom_charge_decrease"
-                "case16" "limited quantity item|%"
-                "case01" "0"
 
-                "ondefault" "!activator,$AddPlayerAttribute,,0,-1"
+            logic_compare
+            {
+                //check if canteen count is at 0
+                "targetname" "canteen_is_empty"
+
+                "CompareValue" "0"
+
+                //"OnEqualTo" "player,$DisplayTextChat,empty,0,-1"
+
+                "OnEqualTo" "on_canteen_empty,Trigger,,0,-1"
+
+                "OnUser1" "!activator,$GetVar$currentCustomCanteenCharges,canteen_is_empty|SetValueCompare|-1,0,-1"
+
+                // "OnUser2" "!activator,$RemoveItemAttribute,refill_ammo|9,0,-1"
+                // "OnUser2" "!activator,$RemoveItemAttribute,special item description|9,0,-1"
+                // "OnUser2" "!activator,$SetVar$canteenIndex,-1,0,-1"
             }
 
             logic_relay
 			{
                 //triggered after a successful custom canteen use
-				"targetname" "canteen_input_cooldown"
+				"targetname" "canteen_input_success"
 				"spawnflags" "2"
 
-                "OnTrigger" "custom_charge_decrease,$SetKey$case01,$$=!activator.currentCustomCanteenCharges,0,-1"
-                "OnTrigger" "custom_charge_decrease,$Format,,0.1,-1"
+                //"OnTrigger"  "player,$DisplayTextChat,success2,0,-1"
 
                 "OnTrigger" "!activator,$SetVar$currentCustomCanteenCharges,$$=!activator.currentCustomCanteenCharges - 1,0,-1"
                 "OnTrigger" "@c@!activator,$SetProp$m_usNumCharges,$$=!activator.currentCustomCanteenCharges - 1,0,-1"
-                "OnTrigger" "player,$DisplayTextCenter,$$=!activator.currentCustomCanteenCharges - 1,0,-1"
-				
-                // "OnTrigger" "player,$DisplayTextChat,input cooldown,0,-1"
-                // "OnTrigger" "canteen_input,$CancelPending,,0,-1"
-                // "OnTrigger" "canteen_input,FireUser1,,5,-1" //cooldown
-                // "OnTrigger" "player,$DisplayTextChat,cooldown ended,4,-1"
+                "OnTrigger" "canteen_is_empty,FireUser1,,0.01,-1"//"!activator,$GetVar$currentCustomCanteenCharges,canteen_is_empty|SetValueCompare|-1,0.01,-1"
+                //"OnTrigger" "player,$DisplayTextCenter,$$=!activator.currentCustomCanteenCharges - 1,0,-1"
 			}
 
             $filter_variable
@@ -96,13 +121,42 @@
                 "OnPass" "canteen_effect,TestActivator,,0,-1"
             }
 
-            filter_tf_condition
+            logic_case
+            {
+                //change custom charge attribute to sync with upgrade station
+                "targetname" "custom_charge_decrease"
+                "case16" "%|%"
+                "case01" "none"
+                "case02" "0"
+
+                "ondefault" "!activator,$AddPlayerAttribute,,0,-1"
+
+                //using !self here will break things randomly btw. turbo autism but I'm used to that by now
+                "OnUser1" "custom_charge_decrease,$SetKey$case01,$$=!activator.currentCustomCanteenAttribute,0,-1"
+				"OnUser1" "custom_charge_decrease,$SetKey$case02,$$=!activator.currentCustomCanteenCharges - 1,0,-1"
+                "OnUser1" "custom_charge_decrease,$Format,,0.1,-1"
+
+                //resync
+                "OnUser2" "custom_charge_decrease,$SetKey$case01,$$=!activator.currentCustomCanteenAttribute,0,-1"
+				"OnUser2" "custom_charge_decrease,$SetKey$case02,$$=!activator.currentCustomCanteenCharges,0,-1"
+                "OnUser2" "custom_charge_decrease,$Format,,0.1,-1"
+            }
+
+            $filter_variable
 			{
 				"targetname" "canteen_effect" //speed boost canteen
-				"Negated" "0"
-				"condition" "150"
 
-                "OnPass" "canteen_input_cooldown,Trigger,,0,-1"
+                "$value" "1"
+
+				"$name" "canteenIndex"
+				"$compare" "equal"
+				"Negated" "0"
+
+                //"OnPass" "player,$DisplayTextChat,success,0,-1"
+
+                "OnPass" "canteen_input_success,Trigger,,0,-1"
+
+                "OnPass" "custom_charge_decrease,FireUser1,,0,-1"
 
                 "OnPass" "player,$DisplayTextChat,{red}{activator}{reset} has used their {9BBF4D}SPEED BOOST {reset}Power Up Canteen!,0,-1"
                 "OnPass" "!activator,$AddCond,32,0,-1"
@@ -166,18 +220,39 @@
                 "start_active" "0"
             }
 
-			filter_tf_condition
+			$filter_variable
 			{
 				"targetname" "canteen_effect" //reprogram canteen
+				
+                "$value" "2"
+
+				"$name" "canteenIndex"
+				"$compare" "equal"
 				"Negated" "0"
-				"condition" "151"
+
+
+                "OnPass" "canteen_input_success,Trigger,,0,-1"
+
+                "OnPass" "custom_charge_decrease,FireUser1,,0,-1"
 
                 "OnPass" "player,$DisplayTextChat,{red}{activator}{reset} has used their {9BBF4D}REPROGRAM {reset}Power Up Canteen!,0,-1"
                 "OnPass" "sapper_effect,Stop,,0,-1" 
                 "OnPass" "sapper_effect,Start,,0.01,-1" 
                 "OnPass" "reprogram_canteen_apply,FireUser1,,0,-1" 
+			}
 
-                "OnPass" "canteen_input_cooldown,Trigger,,0,-1"
+			$filter_variable
+			{
+				"targetname" "canteen_effect" //refill ammo canteen, doesn't do anything beside catching up
+				"$value" "3"
+
+				"$name" "canteenIndex"
+				"$compare" "equal"
+				"Negated" "0"
+
+                "OnPass" "canteen_input_success,Trigger,,0,-1"
+
+                "OnPass" "custom_charge_decrease,FireUser1,,0,-1"
 			}
 		}
 
@@ -190,7 +265,18 @@
                 "targetname" "canteen_count_update"
                 "spawnflags" "2"
 
+				"$OnUser5" "!activator,$RemoveItemAttribute,refill_ammo|9,0"
                 "$OnUser5" "@c@!activator,$SetProp$m_usNumCharges,,0,-1"
                 "$OnUser5" "!activator,$SetVar$currentCustomCanteenCharges,,0,-1"
+            }
+
+            logic_relay 
+            {
+                "targetname" "on_canteen_empty"
+                "spawnflags" "2"
+
+                "OnTrigger" "!activator,$RemoveItemAttribute,refill_ammo|9,0,-1"
+                "OnTrigger" "!activator,$RemoveItemAttribute,special item description|9,0,-1"
+                "OnTrigger" "!activator,$SetVar$canteenIndex,-1,0,-1"
             }
         }

@@ -1,34 +1,64 @@
 	ExtendedUpgrades
 	{
 		//canteens
-		upgrade
+		speed_can
 		{
 			Name "Speed Boost Canteen" 
-			Attribute "limited quantity item" 
-			Cap 3 
+
+			//random attribute, preferably one that doesn't do anything nor show up on the player, basically just meant to index
+			//remember to edit output to apply this attribute as currentCustomCanteenAttribute so that it can automatically be formatted
+			Attribute "mvm completed challenges bitmask" 
+			Cap 5
 			Increment 1 
 			Cost 50
 
             PlayerUpgrade 1
+
+			RequiredWeapons 
+			{
+				Classname "tf_powerup_bottle" 
+			}
+
+			RequiredWeaponsString "No canteen equipped"
+
+			DisallowedUpgrade
+			{
+				Upgrade re_can 
+			} 
+
+            DisallowedUpgrade
+			{
+				Upgrade ammo_can 
+			} 
             
             OnUpgrade
             {
                 Output "canteen_count_update,$FireUser5,"
-                Output "!activator,$AddItemAttribute,special item description|Consumable: Consumable: Gain a speed boost for 5 seconds|9,0"
-                Output "!activator,$AddCond,150,0"
+                Output "!activator,$AddItemAttribute,special item description|Consumable: Gain a speed boost for 5 seconds|9,0"
+
+                Output "!activator,$SetVar$canteenIndex,1,0"
+                Output "!activator,$SetVar$currentCustomCanteenAttribute,mvm completed challenges bitmask,0"
             }
 
             OnApply
             {
+                Output "!activator,$AddItemAttribute,special item description|Consumable: Gain a speed boost for 5 seconds|9,0"
+
+                Output "!activator,$SetVar$currentCustomCanteenAttribute,mvm completed challenges bitmask,0"
+                Output "!activator,$SetVar$canteenIndex,1,0"
+            }
+
+            OnDowngrade
+            {
                 Output "canteen_count_update,$FireUser5,"
-                Output "!activator,$AddItemAttribute,special item description|Consumable: Consumable: Gain a speed boost for 5 seconds|9,0"
-                Output "!activator,$AddCond,150,0"
+                Output "on_canteen_empty,Trigger,,0"
             }
 		}
 
-        upgrade
+        re_can
 		{
 			Name "Reprogram Canteen" 
+
 			Attribute "limited quantity item" 
 			Cap 10
 			Increment 1 
@@ -36,20 +66,44 @@
 
             PlayerUpgrade 1
 
-			//UIGroup 2 
+			RequiredWeapons 
+			{
+				Classname "tf_powerup_bottle" 
+			}
+
+			RequiredWeaponsString "No canteen equipped"
+
+			DisallowedUpgrade
+			{
+				Upgrade ammo_can 
+			} 
+
+            DisallowedUpgrade
+			{
+				Upgrade speed_can
+            }
 
             OnUpgrade
             {
                 Output "canteen_count_update,$FireUser5,"
                 Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
-                Output "!activator,$AddCond,151,0"
+
+                Output "!activator,$SetVar$currentCustomCanteenAttribute,limited quantity item,0"
+                Output "!activator,$SetVar$canteenIndex,2,0"
             }
 
             OnApply
             {
-                Output "canteen_count_update,$FireUser5,"
                 Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
-                Output "!activator,$AddCond,151,0"
+
+                Output "!activator,$SetVar$currentCustomCanteenAttribute,limited quantity item,0"
+                Output "!activator,$SetVar$canteenIndex,2,0"
+            }
+
+            OnDowngrade
+            {
+                Output "canteen_count_update,$FireUser5,"
+                Output "on_canteen_empty,Trigger,,0"
             }
 		}
 	}
