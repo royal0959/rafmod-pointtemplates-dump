@@ -1,109 +1,400 @@
-	ExtendedUpgrades
-	{
-		//canteens
-		speed_can
-		{
-			Name "Speed Boost Canteen" 
+//pre-made canteen upgrades, you're encouraged to make your own 
 
-			//random attribute, preferably one that doesn't do anything nor show up on the player, basically just meant to index
-			//remember to edit output to apply this attribute as currentCustomCanteenAttribute so that it can automatically be formatted
-			Attribute "mvm completed challenges bitmask" 
-			Cap 5
-			Increment 1 
-			Cost 50
+//canteens cap are locked to 3 max like vanilla canteens
+//canteen logic should be entirely handled within the pointtemplate itself 
+//note that canteen specialist will not reduce the price for custom canteens
+//you can handle canteen sharing yourself
 
-            PlayerUpgrade 1
+ExtendedUpgrades
+{
+    //canteens
+    speed_can
+    {
+        Name "Speed Boost Canteen" 
 
-			RequiredWeapons 
-			{
-				Classname "tf_powerup_bottle" 
-			}
+        //random attribute, preferably one that doesn't do anything nor show up on the player, basically just meant to index
+        //avoid percentage attribute as those make it so the upgrade visually start at 1 as that's the default attribute variable for percentage
+        //you can find attributes at https://wiki.teamfortress.com/wiki/List_of_item_attributes , hidden attributes can be found by searching for 'Hidden' under the Notes section
+        Attribute "mvm completed challenges bitmask" 
+        Cap 3
+        Increment 1 
+        Cost 50
 
-			RequiredWeaponsString "No canteen equipped"
+        UIGroup 2
 
-			DisallowedUpgrade
-			{
-				Upgrade re_can 
-			} 
+        AllowedWeapons
+        {
+            Classname "tf_powerup_bottle"
+        }
 
-            DisallowedUpgrade
-			{
-				Upgrade ammo_can 
-			} 
-            
-            OnUpgrade
-            {
-                Output "canteen_count_update,$FireUser5,"
-                Output "!activator,$AddItemAttribute,special item description|Consumable: Gain a speed boost for 5 seconds|9,0"
+        DisallowedUpgrade {Upgrade re_can}
+        DisallowedUpgrade {Upgrade add_can}
+        DisallowedUpgrade {Upgrade ber_can}
+        DisallowedUpgrade {Upgrade cloak_can}
+        DisallowedUpgrade {Upgrade piss_can}
+        
+        OnUpgrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            //this description is automatically removed when canteen is emptied 
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Gain a speed boost for 5 seconds|9,0"
 
-                Output "!activator,$SetVar$canteenIndex,1,0"
-                Output "!activator,$SetVar$currentCustomCanteenAttribute,mvm completed challenges bitmask,0"
-            }
+            //each canteen upgrade has an associated 'index' variable for the pointtemplate logic to check for and perform pointtemplate magic with
+            Output "!activator,$SetVar$canteenIndex,1,0"
+        }
 
-            OnApply
-            {
-                Output "!activator,$AddItemAttribute,special item description|Consumable: Gain a speed boost for 5 seconds|9,0"
+        OnApply
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Gain a speed boost for 5 seconds|9,0"
+            Output "!activator,$SetVar$canteenIndex,1,0"
+        }
 
-                Output "!activator,$SetVar$currentCustomCanteenAttribute,mvm completed challenges bitmask,0"
-                Output "!activator,$SetVar$canteenIndex,1,0"
-            }
+        OnDowngrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "on_canteen_empty,Trigger,,0"
+        }
 
-            OnDowngrade
-            {
-                Output "canteen_count_update,$FireUser5,"
-                Output "on_canteen_empty,Trigger,,0"
-            }
-		}
+        OnRestore 
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Gain a speed boost for 5 seconds|9,0"
 
-        re_can
-		{
-			Name "Reprogram Canteen" 
+            Output "!activator,$SetVar$canteenIndex,1,0"
+        }
+    }
 
-			Attribute "limited quantity item" 
-			Cap 10
-			Increment 1 
-			Cost 5
+    re_can
+    {
+        Name "Reprogram Canteen" 
 
-            PlayerUpgrade 1
+        Attribute "limited quantity item" 
+        Cap 3
+        Increment 1 
+        Cost 5
 
-			RequiredWeapons 
-			{
-				Classname "tf_powerup_bottle" 
-			}
+        Description "Reprogram non-giant enemies in a radius"
 
-			RequiredWeaponsString "No canteen equipped"
+        UIGroup 2
 
-			DisallowedUpgrade
-			{
-				Upgrade ammo_can 
-			} 
+        AllowedWeapons
+        {
+            Classname "tf_powerup_bottle"
+        }
 
-            DisallowedUpgrade
-			{
-				Upgrade speed_can
-            }
+        DisallowedUpgrade {Upgrade speed_can}
+        DisallowedUpgrade {Upgrade add_can}
+        DisallowedUpgrade {Upgrade ber_can}
+        DisallowedUpgrade {Upgrade cloak_can}
+        DisallowedUpgrade {Upgrade piss_can}
 
-            OnUpgrade
-            {
-                Output "canteen_count_update,$FireUser5,"
-                Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
+        OnUpgrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
 
-                Output "!activator,$SetVar$currentCustomCanteenAttribute,limited quantity item,0"
-                Output "!activator,$SetVar$canteenIndex,2,0"
-            }
+            Output "!activator,$SetVar$canteenIndex,2,0"
+        }
 
-            OnApply
-            {
-                Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
+        OnApply
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
 
-                Output "!activator,$SetVar$currentCustomCanteenAttribute,limited quantity item,0"
-                Output "!activator,$SetVar$canteenIndex,2,0"
-            }
+            Output "!activator,$SetVar$canteenIndex,2,0"
+        }
 
-            OnDowngrade
-            {
-                Output "canteen_count_update,$FireUser5,"
-                Output "on_canteen_empty,Trigger,,0"
-            }
-		}
-	}
+        OnDowngrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "on_canteen_empty,Trigger,,0"
+        }
+
+        OnRestore 
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Reprogram non-giant enemies in a radius|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,2,0"
+        }
+    }
+
+    ber_can
+    {
+        Name "Berserk Canteen" 
+
+        Attribute "throwable healing" 
+        Cap 3
+        Increment 1 
+        Cost 5
+
+        Description "Locked to melee for 5 seconds, greatly increased melee power"
+
+        UIGroup 2
+
+        AllowedWeapons
+        {
+            Classname "tf_powerup_bottle"
+        }
+
+        DisallowedUpgrade {Upgrade re_can}
+        DisallowedUpgrade {Upgrade speed_can}
+        DisallowedUpgrade {Upgrade add_can}
+        DisallowedUpgrade {Upgrade cloak_can}
+        DisallowedUpgrade {Upgrade piss_can}
+
+        OnUpgrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Lock to melee but increase melee power|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,3,0"
+        }
+
+        OnApply
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Lock to melee but increase melee power|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,3,0"
+        }
+
+        OnDowngrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "on_canteen_empty,Trigger,,0"
+        }
+
+        OnRestore
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Lock to melee but increase melee power|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,3,0"
+        }
+    }
+
+    add_can
+    {
+        Name "Adrenaline Canteen" 
+
+        Attribute "throwable damage" 
+        Cap 3
+        Increment 1 
+        Cost 5
+
+        Description "Gain various buffs for 5 seconds, become weakened for a duration afterward"
+
+        UIGroup 2
+
+        AllowedWeapons
+        {
+            Classname "tf_powerup_bottle"
+        }
+
+        DisallowedUpgrade {Upgrade re_can}
+        DisallowedUpgrade {Upgrade speed_can}
+        DisallowedUpgrade {Upgrade ber_can}
+        DisallowedUpgrade {Upgrade cloak_can}
+        DisallowedUpgrade {Upgrade piss_can}
+
+        OnUpgrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Gain various buffs for 5 seconds and become fatigue briefly after duration|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,4,0"
+        }
+
+        OnApply
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Gain various buffs for 5 seconds and become fatigue briefly after duration|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,4,0"
+        }
+
+        OnDowngrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "on_canteen_empty,Trigger,,0"
+        }
+
+        OnRestore
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Gain various buffs for 5 seconds and become fatigue briefly after duration|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,4,0"
+        }
+    }
+
+    cloak_can
+    {
+        Name "Stealth Canteen" 
+
+        Attribute "throwable particle trail only" 
+        Cap 3
+        Increment 1 
+        Cost 5
+
+        Description "Cloak for up to 15 seconds, cloak is cancelled when attacking"
+
+        UIGroup 2
+
+        AllowedWeapons
+        {
+            Classname "tf_powerup_bottle"
+        }
+
+        DisallowedUpgrade {Upgrade re_can}
+        DisallowedUpgrade {Upgrade speed_can}
+        DisallowedUpgrade {Upgrade ber_can}
+        DisallowedUpgrade {Upgrade add_can}
+        DisallowedUpgrade {Upgrade knock_can}
+        DisallowedUpgrade {Upgrade piss_can}
+
+        OnUpgrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Cloak for up to 15 seconds|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,5,0"
+        }
+
+        OnApply
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Cloak for up to 15 seconds|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,5,0"
+        }
+
+        OnDowngrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "on_canteen_empty,Trigger,,0"
+        }
+
+        OnRestore
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Cloak for up to 15 seconds|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,5,0"
+        }
+    }
+
+    piss_can
+    {
+        Name "Pissplosion Canteen" 
+
+        Attribute "decoded by itemdefindex" 
+        Cap 3
+        Increment 1 
+        Cost 5
+
+        Description "Apply Jarate to enemies within a large radius"
+
+        UIGroup 2
+
+        AllowedWeapons
+        {
+            Classname "tf_powerup_bottle"
+        }
+
+        DisallowedUpgrade {Upgrade re_can}
+        DisallowedUpgrade {Upgrade speed_can}
+        DisallowedUpgrade {Upgrade ber_can}
+        DisallowedUpgrade {Upgrade add_can}
+        DisallowedUpgrade {Upgrade cloak_can}
+        DisallowedUpgrade {Upgrade knock_can}
+
+        OnUpgrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Apply Jarate to enemies within a large radius|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,6,0"
+        }
+
+        OnApply
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Apply Jarate to enemies within a large radius|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,6,0"
+        }
+
+        OnDowngrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "on_canteen_empty,Trigger,,0"
+        }
+
+        OnRestore
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Apply Jarate to enemies within a large radius|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,6,0"
+        }
+    }
+
+    knock_can
+    {
+        Name "Knockback Immunity Canteen" 
+
+        Attribute "elevate quality" 
+        Cap 3
+        Increment 1 
+        Cost 5
+
+        Description "Grant knockback immunity for 5 seconds"
+
+        UIGroup 2
+
+        AllowedWeapons
+        {
+            Classname "tf_powerup_bottle"
+        }
+
+        DisallowedUpgrade {Upgrade re_can}
+        DisallowedUpgrade {Upgrade speed_can}
+        DisallowedUpgrade {Upgrade ber_can}
+        DisallowedUpgrade {Upgrade add_can}
+        DisallowedUpgrade {Upgrade cloak_can}
+        DisallowedUpgrade {Upgrade piss_can}
+
+        OnUpgrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Knockback resistance for 5 seconds|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,69,0"
+        }
+
+        OnApply
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Knockback resistance for 5 seconds|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,69,0"
+        }
+
+        OnDowngrade
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "on_canteen_empty,Trigger,,0"
+        }
+
+        OnRestore
+        {
+            Output "canteen_count_update,$FireUser5,"
+            Output "!activator,$AddItemAttribute,special item description|Consumable: Knockback resistance for 5 seconds|9,0"
+
+            Output "!activator,$SetVar$canteenIndex,69,0"
+        }
+    }
+}
