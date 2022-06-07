@@ -1,0 +1,134 @@
+//overrides the effect of heavy's knockback rage upgrade
+//the original knockback effect will no longer be applied when knockback rage is active
+//,and instead a custom effect of your choosing will be used in its place
+
+//the duration is not determined by buff duration attributes
+//refer to rage_meter_drain and rage_meter and edit their interval/drain per interval (which is their delay) in order to change duration
+
+//current effect is applying condition 11 (crit), this is just for testing and can be edited into a different cond or a custom pointtemplat effect
+
+//it is recommended to add "increase buff duration HIDDEN" 100 to heavy primaries affected by the override
+//in order to keep the bar draining smoothly, as the drain effect is faked and will be choppy if the vanilla drain effect attempts to drain alongside it 
+//, by setting buff duration to a comically high value, the vanilla drain effect will never go down
+
+//do this if you override knockback rage on all miniguns
+PlayerAttributes 
+{
+    Heavyweapons
+    {
+        "increase buff duration HIDDEN" 100
+    }
+}
+
+//or just a specific weapon
+ItemAttributes 
+{
+    ItemName "Natascha"
+    "increase buff duration HIDDEN" 100
+}
+
+//can be used to only override knockback rage on a certain weapon 
+PlayerItemEquipSpawnTemplate 
+{
+    Name KnockbackRageReplacement
+    ItemName "Natascha"
+}
+
+//or be used to globally override knockback rage on every weapons
+PlayerSpawnTemplate 
+{
+    Name KnockbackRageReplacement
+    Class Heavyweapons 
+}
+
+//Point Template
+KnockbackRageReplacement
+{
+    OnSpawnOutput 
+    {
+        Target "filter_rage_activated"
+        Action "FireUser1"
+        Delay 0
+    }
+
+    OnParentKilledOutput 
+    {
+        Target "!activator"
+        Action "$ResetClientProp$m_bRageDraining"
+        Delay 0.1
+    }
+
+    OnParentKilledOutput 
+    {
+        Target "!activator"
+        Action "$ResetClientProp$m_flRageMeter"
+        Delay 0.1
+    }
+
+    //check when rage was activated by player
+    $filter_sendprop
+    {
+        "targetname" "filter_rage_activated"
+        "$name" "m_bRageDraining"
+        "$value" "1"
+        "$compare" "equal"
+        "Negated" "0"
+
+        "OnPass" "rage_activated,Trigger,,0,-1"
+        //"OnPass" "player,$DisplayTextChat,activated,0,-1"
+
+        "OnUser1" "!self,TestActivator,,0,-1"
+        "OnUser1" "!self,FireUser1,,0.1,-1"
+    }
+
+    logic_relay 
+    {
+        "targetname" "rage_activated"
+        "spawnflags" "2"
+
+        "OnTrigger" "!activator,$SetClientProp$m_bRageDraining,1,0,-1"
+        "OnTrigger" "!activator,$SetProp$m_bRageDraining,0,0,-1"
+
+        ////////////apply effect///////////
+        "OnTrigger" "!activator,$AddCond,11,0,-1"
+        ///////////////////////////////////
+
+        "OnTrigger" "rage_meter,SetValueNoFire,$$=!activator.m_flRageMeter,0,-1"
+        "OnTrigger" "rage_meter_drain,FireUser1,,0.01,-1"
+    }
+
+    logic_relay 
+    {
+        "targetname" "rage_meter_drain"
+        "spawnflags" "2"
+
+        "OnUser1" "rage_meter,FireUser1,,0,-1"
+        "OnUser1" "!self,FireUser1,,0.1,-1" //interval
+    }
+
+    math_counter
+    {
+        "targetname" "rage_meter"
+        "startvalue" "0"
+        "min" "0"
+        "max" "100" 
+
+        "OnHitMin" "rage_meter_drain,$CancelPending,,0,0"
+
+        "OnHitMin" "!activator,$SetClientProp$m_bRageDraining,0,0,-1"
+        "OnHitMin" "!activator,$ResetClientProp$m_flRageMeter,,0.03,-1"
+        "OnHitMin" "!activator,$SetProp$m_flRageMeter,0,0,-1"
+        
+        ////////////remove effect//////////
+        "OnHitMin" "!activator,$RemoveCond,11,0,-1"
+        ///////////////////////////////////
+
+        //"OnHitMin" "player,$DisplayTextChat,rage meter ended,0,-1"
+
+        "OnGetValue" "rage_meter,$SetVar$tempRageHolder,,0,-1"
+        "OnGetValue" "!activator,$SetClientProp$m_flRageMeter,$$=rage_meter.tempRageHolder,0.01,-1"
+
+        "OnUser1" "!self,Subtract,1,0,-1" //drain per interval
+        "OnUser1" "!self,GetValue,,0.01,-1"
+    }
+}
