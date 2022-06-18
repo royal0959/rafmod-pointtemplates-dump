@@ -1,0 +1,71 @@
+//pointtemplate for checking if player is currently equipped a weapon on a specified slot and perform outputs accordingly 
+
+//this example checks if a spy player is holding slot 1 (melee [remember array indices start at 0])
+//and if they are, apply "cannot pick up intelligence" to their melee weapon and remove it otherwise
+//this is to avoid needing to use "provide on active" which will mess with max health penalty and looks very unclean 
+
+//can easily be modified to accomplish other effects, simply change the desired slot to check for under "setup" and handle output cases under "compare_result"
+NoKnifeBombPickup
+{
+    OnSpawnOutput 
+    {
+        Target "setup"
+        Action "Trigger"
+        Delay 0
+    }
+
+    OnSpawnOutput 
+    {
+        Target "compare_loop"
+        Action "Trigger"
+        Delay 0.01
+    }
+
+    logic_relay 
+    {
+        "targetname" "setup"
+
+        //m_hMyWeapons$<desired slot>
+        //in this case 1 is melee
+        "OnTrigger" "@e@m_hMyWeapons$1@!activator,$GetEntIndex,compare_current_weapon|$SetVar$desiredEntIndex|-1,0,-1"
+    }
+
+    logic_relay 
+    {
+        "targetname" "compare_loop"
+        "spawnflags" "2"
+
+        "OnTrigger" "@e@m_hActiveWeapon@!activator,$GetEntIndex,compare_current_weapon|$FireUser5|-1,0,-1"
+        "OnTrigger" "!self,Trigger,,0.1,-1"
+    }
+
+    logic_relay 
+    {
+        "targetname" "compare_current_weapon"
+        "spawnflags" "2"
+
+        "$OnUser5" "compare_current_weapon,$SetVar$inputHolder,,0,-1"
+        //check if current weapon is desired slot
+        "$OnUser5" "compare_result,InValue,$$=?(compare_current_weapon.desiredEntIndex == compare_current_weapon.inputHolder, 1, 0),0.01,-1"
+    }
+
+    logic_case
+    {
+        "targetname" "compare_result"
+        "case01" "1" //true 
+        "case02" "0" //false
+    
+        //is not on slot
+        "OnCase02" "!activator,$RemoveItemAttribute,cannot pick up intelligence|2,0,-1"
+
+        //is on slot
+        "OnCase01" "!activator,$AddItemAttribute,cannot pick up intelligence|1|2,0,-1"
+        
+    }
+}
+
+PlayerSpawnTemplate 
+{
+    Name NoKnifeBombPickup
+    Class Spy 
+}
