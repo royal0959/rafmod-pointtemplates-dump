@@ -106,29 +106,30 @@ KnockbackRageReplacement
         "OnUser1" "!self,FireUser1,,0.1,-1" //interval
     }
 
-    math_counter
-    {
-        "targetname" "rage_meter"
-        "startvalue" "0"
-        "min" "0"
-        "max" "100" 
+	math_counter
+	{
+		"targetname" "rage_meter"
+		"startvalue" "0"
+		"min" "0"
+		"max" "100" 
 
-        "OnHitMin" "rage_meter_drain,$CancelPending,,0,0"
+		"OnHitMin" "rage_meter_drain,$CancelPending,,0,0"
 
-        "OnHitMin" "!activator,$SetClientProp$m_bRageDraining,0,0,-1"
-        "OnHitMin" "!activator,$ResetClientProp$m_flRageMeter,,0.03,-1"
-        "OnHitMin" "!activator,$SetProp$m_flRageMeter,0,0,-1"
-        
-        ////////////remove effect//////////
-        "OnHitMin" "!activator,$RemoveCond,11,0,-1"
-        ///////////////////////////////////
+		"OnHitMin" "!activator,$ResetClientProp$m_bRageDraining,,0,-1"
+		"OnHitMin" "!activator,$ResetClientProp$m_flRageMeter,,0.03,-1"
+		"OnHitMin" "!activator,$SetProp$m_flRageMeter,0,0.1,-1"
 
-        //"OnHitMin" "player,$DisplayTextChat,rage meter ended,0,-1"
+		////////////remove effect//////////
+		"OnHitMin" "!activator,$RemoveCond,11,0,-1"
+		///////////////////////////////////
 
-        "OnGetValue" "rage_meter,$SetVar$tempRageHolder,,0,-1"
-        "OnGetValue" "!activator,$SetClientProp$m_flRageMeter,$$=rage_meter.tempRageHolder,0.01,-1"
+		//"OnHitMin" "player,$DisplayTextChat,rage meter ended,0,-1"
 
-        "OnUser1" "!self,Subtract,1,0,-1" //drain per interval
-        "OnUser1" "!self,GetValue,,0.01,-1"
-    }
+		"OnGetValue" "rage_meter,$SetVar$tempRageHolder,,0,-1"
+		"OnGetValue" "!activator,$SetClientProp$m_flRageMeter,$$=rage_meter.tempRageHolder,0.01,-1"
+		"OnGetValue" "!activator,$SetProp$m_flRageMeter,-100000,0,-1" //prevent rage from being reused while active
+
+		"OnUser1" "!self,Subtract,1,0,-1" //drain per interval, 1.3 is 8 seconds
+		"OnUser1" "!self,GetValue,,0.01,-1"
+	}
 }
