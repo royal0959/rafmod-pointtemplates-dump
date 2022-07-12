@@ -89,7 +89,7 @@ WaveSchedule
 				"Negated" "1"
 
 				"OnPass" "!activator,$SetVar$currentCustomCanteenCharges,0,0,-1"
-				"OnPass" "@c@!activator,$SetProp$m_usNumCharges,0,0,-1"
+				//"OnPass" "@c@!activator,$SetProp$m_usNumCharges,0,0,-1"
 			}
 
 			logic_branch
