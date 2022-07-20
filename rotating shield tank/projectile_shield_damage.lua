@@ -11,8 +11,11 @@ local LEVELS_INFO = {
 
 local registeredShields = {} --value is debounce players
 
-function _register(shieldEnt, level, ownerTeamnum)
+function _register(shieldEnt, level, ownerTeamnum, activator)
 	local handle = shieldEnt:GetHandleIndex()
+
+	-- shieldEnt:AcceptInput("$SetKey$teamnum", ownerTeamnum)
+	-- shieldEnt:AcceptInput("$SetKey$skin", ownerTeamnum == 3 and 1 or 2)
 
 	registeredShields[handle] = {}
 
@@ -47,7 +50,7 @@ function _register(shieldEnt, level, ownerTeamnum)
 			end
 
 			local damageInfo = {
-				Attacker = target,
+				Attacker = activator or target,
 				Inflictor = nil,
 				Weapon = nil,
 				Damage = levelInfo.Damage,
@@ -70,10 +73,9 @@ end
 function registerShieldLvl1(shieldEntName, activator)
 	local shieldEnt = ents.FindByName(shieldEntName)
 
-	-- local owner = shieldEnt:DumpProperties()["m_hOwnerEntity"]
 	local ownerTeamnum = activator:DumpProperties()["m_iTeamNum"]
 
-	_register(shieldEnt, 1, ownerTeamnum)
+	_register(shieldEnt, 1, ownerTeamnum, activator:IsBot() and activator)
 end
 
 function registerShieldLvl2(shieldEntName, activator)
@@ -81,5 +83,5 @@ function registerShieldLvl2(shieldEntName, activator)
 
 	local ownerTeamnum = activator:DumpProperties()["m_iTeamNum"]
 
-	_register(shieldEnt, 2, ownerTeamnum)
+	_register(shieldEnt, 2, ownerTeamnum, activator:IsBot() and activator)
 end

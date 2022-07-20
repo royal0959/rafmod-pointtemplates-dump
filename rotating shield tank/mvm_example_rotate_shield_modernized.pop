@@ -1,15 +1,13 @@
 #base robot_standard.pop
 #base robot_giant.pop
-#base rotating_shield_tanks.pop
+#base rotating_shield.pop
 
 tomboy
 {
 	StartingCurrency 1984
 	CanBotsAttackWhileInSpawnRoom no
 	RespawnWaveTime 0
-
-	LuaScriptFile "scripts/projectile_shield_damage.lua" 
-
+	
 	ExtraSpawnPoint  
 	{
 		Name "red"
@@ -49,7 +47,9 @@ tomboy
 				Name "tankboss"
 				StartingPathTrackNode "path_tank_a"
 
-				Template RShieldLvL1Tank
+				ClassIcon tank_shield
+
+				Template RShieldLvL1
 
 				OnKilledOutput
 				{
@@ -82,7 +82,9 @@ tomboy
 				Name "tankboss"
 				StartingPathTrackNode "path_tank_a"
 
-				Template RShieldLvL2Tank
+				ClassIcon tank_shield
+
+				Template RShieldLvL2
 
 				OnKilledOutput
 				{
@@ -96,81 +98,6 @@ tomboy
 					Action Trigger
 				}
 			}
-		}
-
-        WaveSpawn 
-		{
-		    Where spawnbot  
-			TotalCount 50
-			MaxActive 1
-			SpawnCount 1
-			WaitBetweenSpawns 0
-			WaitBeforeStarting 0
-			TotalCurrency 0
-
-			TFBot
-            {
-                Class heavyballsacks
-
-                Action Mobber
-
-                CharacterAttributes
-                {
-                    "no_attack" 1
-                }
-            }
-		}
-
-        WaveSpawn 
-		{
-		    Where red  
-			TotalCount 50
-			MaxActive 1
-			SpawnCount 1
-			WaitBetweenSpawns 0
-			WaitBeforeStarting 0
-			TotalCurrency 0
-
-			TFBot
-            {
-                Class heavyballsacks
-
-                Action Mobber
-
-                CharacterAttributes
-                {
-                    "no_attack" 1
-                }
-
-                AddCond {Index 43}
-            }
-		}
-
-        WaveSpawn 
-		{
-		    Where spawnbot  
-			TotalCount 50
-			MaxActive 2
-			SpawnCount 2
-			WaitBetweenSpawns 0
-			WaitBeforeStarting 0
-			TotalCurrency 0
-
-			TFBot
-            {
-                Attributes MiniBoss
-
-                Health 3000
-                
-                Class heavyballsacks
-
-                Action Mobber
-
-                CharacterAttributes
-                {
-                    "no_attack" 1
-                }
-            }
 		}
 	}
 
@@ -187,73 +114,19 @@ tomboy
 			Action Trigger
 		}
 
-		WaveSpawn 
+        WaveSpawn 
 		{
 		    Where spawnbot  
-			TotalCount 1
+			TotalCount 50
 			MaxActive 1
 			SpawnCount 1
 			WaitBetweenSpawns 0
-			WaitBeforeStarting 0.1
-			TotalCurrency 0
-
-			Tank
-			{
-				Health 1000
-				Speed 0
-				Name "tankboss"
-				StartingPathTrackNode "path_tank_a"
-
-				OnKilledOutput
-				{
-				Target boss_dead_relay
-				Action Trigger
-				}
-
-				OnBombDroppedOutput
-				{
-				Target boss_deploy_relay
-				Action Trigger
-				}
-			}
-		}
-
-        WaveSpawn 
-		{
-		    Where spawnbot  
-			TotalCount 50
-			MaxActive 3
-			SpawnCount 3
-			WaitBetweenSpawns 0
 			WaitBeforeStarting 0
 			TotalCurrency 0
 
 			TFBot
             {
-                Class soldier
-
-                Action Mobber
-
-                // CharacterAttributes
-                // {
-                //     "no_attack" 1
-                // }
-            }
-		}
-
-        WaveSpawn 
-		{
-		    Where red  
-			TotalCount 50
-			MaxActive 2
-			SpawnCount 2
-			WaitBetweenSpawns 0
-			WaitBeforeStarting 0
-			TotalCurrency 0
-
-			TFBot
-            {
-                Class heavyballsacks
+                Class heavyfromteamfort
 
                 Action Mobber
 
@@ -262,7 +135,62 @@ tomboy
                     "no_attack" 1
                 }
 
-                AddCond {Index 43}
+				Template RShieldLvL1
+            }
+		}
+
+        WaveSpawn 
+		{
+		    Where red  
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBetweenSpawns 0
+			WaitBeforeStarting 0
+			TotalCurrency 0
+
+			TFBot
+            {
+                Class heavyfromteamfort
+
+                Action Mobber
+
+                CharacterAttributes
+                {
+                    "no_attack" 1
+                }
+
+				
+				AddCond {Index 43}
+
+				Template RShieldLvL1_Red
+            }
+		}
+
+        WaveSpawn 
+		{
+		    Where spawnbot  
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBetweenSpawns 0
+			WaitBeforeStarting 0
+			TotalCurrency 0
+
+			TFBot
+            {
+                Class heavyfromteamfort
+
+				Attributes Miniboss
+
+                Action Mobber
+
+                CharacterAttributes
+                {
+                    "no_attack" 1
+                }
+
+				Template RShieldLvL2
             }
 		}
 	}
