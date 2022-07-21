@@ -35,6 +35,8 @@ function _register(shieldEnt, level, ownerTeamnum, activator)
 				return
 			end
 
+			local visualHitPost = hitPos + Vector(0, 0, 50)
+
 			local targetHandle = target:GetHandleIndex()
 
 			local nextAllowedDamageTickOnTarget = registeredShields[handle][targetHandle] or -1
@@ -56,9 +58,9 @@ function _register(shieldEnt, level, ownerTeamnum, activator)
 				Damage = levelInfo.Damage,
 				DamageType = DMG_SHOCK,
 				DamageCustom = 0,
-				DamagePosition = hitPos,
+				DamagePosition = visualHitPost,
 				DamageForce = Vector(0, 0, 0),
-				ReportedPosition = hitPos
+				ReportedPosition = visualHitPost
 			}
 
 			local dmg = target:TakeDamage(damageInfo)
