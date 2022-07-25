@@ -1,0 +1,4 @@
+WaveSchedule
+{
+	LuaScriptFile "scripts/scoutairdash.lua" 
+}
