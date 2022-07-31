@@ -1,0 +1,16 @@
+WaveSchedule
+{
+	LuaScriptFile "scripts/true_ignited_arrow.lua" 
+
+	PointTemplates 
+	{
+		AlwaysIgnited
+		{
+			OnSpawnOutput
+			{
+				Target "popscript"
+				Action "$ApplyAlwaysIgnite"
+			}
+		}
+	}
+}
