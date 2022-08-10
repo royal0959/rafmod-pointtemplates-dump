@@ -1,0 +1,4 @@
+WaveSchedule
+{
+	LuaScriptFile "scripts/custom_spells_logic.lua" 
+}

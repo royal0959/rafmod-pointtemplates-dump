@@ -1,0 +1,143 @@
+#base robot_standard.pop
+#base robot_giant.pop
+#base custom_spells_base.pop
+
+tomboy
+{
+	StartingCurrency 10
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 0
+
+	ForceHoliday 2
+	BotsDropSpells 1
+	SpellDropRateCommon 0
+
+	ExtraSpawnPoint  
+	{
+		Name "red"
+		TeamNum 3
+		X "2408.000000" 
+		Y "-96.000000" 
+		Z "267.031311"
+	}
+	Wave 
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+       WaveSpawn 
+		{
+		    Where spawnbot  
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBetweenSpawns 0
+			WaitBeforeStarting 0
+			TotalCurrency 0
+
+			TFBot
+            {
+                Class heavyfromteamfort
+
+				Attributes Miniboss
+
+                Action Mobber
+
+                CharacterAttributes
+                {
+                    "no_attack" 1
+				}
+            }
+		}
+	}
+
+    Wave 
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+        WaveSpawn 
+		{
+		    Where spawnbot  
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBetweenSpawns 0
+			WaitBeforeStarting 0
+			TotalCurrency 0
+
+			TFBot
+            {
+                Template T_TFBot_Sniper_Huntsman
+
+                Action Mobber
+            }
+		}
+
+        WaveSpawn 
+		{
+		    Where red  
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBetweenSpawns 0
+			WaitBeforeStarting 0
+			TotalCurrency 0
+
+			TFBot
+            {
+                Class heavyfromteamfort
+
+                Action Mobber
+
+                CharacterAttributes
+                {
+                    "no_attack" 1
+                }
+
+				
+				AddCond {Index 43}
+            }
+		}
+
+        WaveSpawn 
+		{
+		    Where spawnbot  
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBetweenSpawns 0
+			WaitBeforeStarting 0
+			TotalCurrency 0
+
+			TFBot
+            {
+                Class heavyfromteamfort
+
+				Attributes Miniboss
+
+                Action Mobber
+
+                CharacterAttributes
+                {
+                    "no_attack" 1
+				}
+            }
+		}
+	}
+}
