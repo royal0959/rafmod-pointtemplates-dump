@@ -1,0 +1,8 @@
+{
+	"Lua.diagnostics.globals": [
+		"IN_ATTACK",
+		"timer",
+		"ents",
+		"Entity"
+	],
+}

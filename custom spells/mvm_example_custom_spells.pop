@@ -11,6 +11,7 @@ tomboy
 	ForceHoliday 2
 	BotsDropSpells 1
 	SpellDropRateCommon 0
+	SpellDropRateGiant 0
 
 	ExtraSpawnPoint  
 	{
