@@ -1,0 +1,154 @@
+WaveSchedule
+{
+	Monoculus
+	{
+		SpawnTemplate Monoculus_Blimp
+		
+		DisableSmokestack 1  
+		Classicon boss_eyeball
+		MaxTurnRate 0
+		// DestroyTemplate Monoculus_Death //randomly crashes :(
+		Model "models/empty.mdl" 
+		StartSound "ui/halloween_boss_summoned_monoculus.wav"
+		PingSound "misc/null.wav"
+		EngineLoopSound "misc/null.wav"
+		TriggerDestroyBuildingFix 1
+		Gravity 0  
+		DisableTracks 1  
+		DisableChildModels 1  
+	}
+
+	PointTemplates
+	{
+		// modernized version of moonlight menace's monoculus blimp
+		Monoculus_Blimp
+		{
+			OnSpawnOutput
+			{
+				Target "!activator"
+				Action "AddOutput"
+				Param "$OnUser5 monoculus_model:$RotateTowards:!activator:0:-1"
+				Delay 0.1
+			}
+			OnSpawnOutput
+			{
+				Target "!activator"
+				Action "AddOutput"
+				Param "$OnUser5 monoculus_firer:$RotateTowards:!activator:0:-1"
+				Delay 0.1
+			}
+			OnParentKilledOutput
+			{
+				Target "!activator"
+				Action "$RemoveOutput"
+				Param "$OnUser5"
+			}
+
+			OnSpawnOutput
+			{
+				Target "!activator"
+				Action "$SetCollisionFilter"
+				Param "filter_is_red"
+				Delay 0.1
+			}
+
+			OnSpawnOutput
+			{
+				Target "target_check"
+				Action "Trigger"
+				Delay 0.1
+			}
+
+			OnSpawnOutput
+			{
+				Target "monoculus_firer"
+				Action "FireUser1"
+				Delay 5
+			}
+
+			logic_relay 
+			{
+				"targetname" "target_check"
+				"spawnflags" "2"
+
+				"OnTrigger" "monoculus_target_trigger,$TargetTest,,0,-1"
+				"OnTrigger" "!self,Trigger,,0.5,-1"
+			}
+
+			//particle
+			info_particle_system
+			{
+				"parentname" "monoculus_model"
+				"targetname" "monoculus_aura"
+				"origin" "0 0 0"
+				"effect_name" "eyeboss_aura_grumpy"
+				"flag_as_weather" "0"
+				"start_active" "1"
+			}
+
+			tf_point_weapon_mimic
+			{
+				"parentname" "monoculus_model"
+				"targetname" "monoculus_firer"
+
+				"spawnflags" "1"
+				"teamnum" "3"
+				"Crits" "0"
+				"Damage" "75"
+				"ModelScale" "1"
+				"SpeedMax" "700"
+				"SpeedMin" "700"
+				"SplashRadius" "144"
+				"SpreadAngle" "0"
+				"WeaponType" "0"
+
+				"$killicon" "eyeball_rocket"
+
+				"OnUser1" "monoculus_model,FireUser1,,0,-1"
+
+				"OnUser1" "!self,FireOnce,,0,-1"
+				"OnUser1" "!self,FireOnce,,0.4,-1"
+				"OnUser1" "!self,FireOnce,,0.8,-1"
+
+				"OnUser1" "!self,FireUser1,,4,-1"
+
+				"$OnFire" "!activator,$SetModel,models/props_halloween/eyeball_projectile.mdl,0,-1"
+			}
+
+			prop_dynamic
+			{
+				"targetname" "monoculus_model"
+				"model" "models/props_halloween/halloween_demoeye.mdl"
+				"origin" "0 0 0"
+				"angles" "0 0 0"
+				"DefaultAnim" "general_noise"
+				"solid" "0"
+
+				"$modules" "rotator"
+
+				"$positiononly" "1"
+				"$rotationspeedx" "500"
+				"$rotationspeedy" "500"
+				"$rotationspeedz" "500"
+
+				"OnUser1" "!self,SetAnimation,firing3,0,-1"
+			}
+
+			$trigger_detector
+			{
+				"targetname" "monoculus_target_trigger"
+				"spawnflags" "1"
+
+				"maxs" "2000 2000 2000"
+				"mins" "-2000 -2000 -2000"
+
+				"filtername" "filter_is_red"
+
+				"$checklineofsight" "0"
+				"$fov" "360"
+
+				"$TargetTestPass" "!parent,$FireUser5,,0,-1"
+			}
+		}
+	}
+}
