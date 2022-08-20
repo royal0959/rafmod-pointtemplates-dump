@@ -1,0 +1,44 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 5
+
+	LuaScriptFile "scripts/cash_on_hit_logic.lua"
+
+	Wave // Wave 1
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Where spawnbot
+			TotalCount 5
+			MaxActive 5
+			SpawnCount 5
+			WaitBeforeStarting 0.1
+			WaitBetweenSpawns 0
+			
+			TotalCurrency 0
+			
+			TFBot
+			{ 
+				Class Heavyweapons
+				Attributes SuppressFire
+			}
+		}
+	}
+}

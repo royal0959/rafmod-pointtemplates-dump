@@ -3,6 +3,12 @@
 		"IN_ATTACK",
 		"timer",
 		"ents",
-		"Entity"
+		"Entity",
+		"ON_DAMAGE_RECEIVED_POST",
+		"TF_DMG_CUSTOM_BURNING",
+		"DMG_BLAST",
+		"DMG_CRITICAL",
+		"DMG_MELEE",
+		"PrintTable"
 	],
 }
