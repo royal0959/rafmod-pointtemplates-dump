@@ -9,6 +9,7 @@
 		"DMG_BLAST",
 		"DMG_CRITICAL",
 		"DMG_MELEE",
-		"PrintTable"
+		"PrintTable",
+		"ON_DAMAGE_RECEIVED_PRE"
 	],
 }
