@@ -21,7 +21,7 @@ local function cashforhits(activator)
 		local damageType = damageInfo.DamageType
 		local hitter = damageInfo.Attacker
 
-		if (damageType & TF_DMG_CUSTOM_BURNING) ~= 0 then
+		if (damageType & DMG_BURN) ~= 0 then
 			return
 		end
 
