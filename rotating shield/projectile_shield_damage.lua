@@ -75,15 +75,15 @@ end
 function registerShieldLvl1(shieldEntName, activator)
 	local shieldEnt = ents.FindByName(shieldEntName)
 
-	local ownerTeamnum = activator:DumpProperties()["m_iTeamNum"]
+	local ownerTeamnum = activator.m_iTeamNum
 
-	_register(shieldEnt, 1, ownerTeamnum, activator:IsBot() and activator)
+	_register(shieldEnt, 1, ownerTeamnum, activator:IsPlayer() and activator)
 end
 
 function registerShieldLvl2(shieldEntName, activator)
 	local shieldEnt = ents.FindByName(shieldEntName)
 
-	local ownerTeamnum = activator:DumpProperties()["m_iTeamNum"]
+	local ownerTeamnum = activator.m_iTeamNum
 
-	_register(shieldEnt, 2, ownerTeamnum, activator:IsBot() and activator)
+	_register(shieldEnt, 2, ownerTeamnum, activator:IsPlayer() and activator)
 end
