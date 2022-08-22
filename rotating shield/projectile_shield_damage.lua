@@ -45,7 +45,7 @@ function _register(shieldEnt, level, ownerTeamnum, activator)
 				return
 			end
 
-			local targetTeamnum = target:DumpProperties()["m_iTeamNum"]
+			local targetTeamnum = target.m_iTeamNum
 
 			if targetTeamnum == ownerTeamnum then
 				return
