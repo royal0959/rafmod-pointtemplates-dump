@@ -10,6 +10,8 @@
 		"DMG_CRITICAL",
 		"DMG_MELEE",
 		"PrintTable",
-		"ON_DAMAGE_RECEIVED_PRE"
+		"ON_DAMAGE_RECEIVED_PRE",
+		"ON_DEATH",
+		"ON_SPAWN"
 	],
 }

@@ -1,0 +1,76 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 5
+
+	ForceHoliday 2 
+	BotsDropSpells 1
+
+	LuaScriptFile "scripts/the_fat_request.lua"
+
+	PointTemplates
+	{
+        SpellsGenerator
+        {
+            OnSpawnOutput
+            {
+                Target "popscript"
+                Action "$SpellGenerator"
+                Param "33" // chance for a rare spell roll, common spell roll is 100 minus sent value (i.e if rare is 33%, common is 67%)
+            }
+        }
+	}
+
+	ForceItem "TF_WEAPON_SPELLBOOK"
+
+	PlayerSpawnTemplate
+	{
+		Name SpellsGenerator
+	}
+
+	Wave // Wave 1
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Class Demoman
+
+				Item "TF_WEAPON_SPELLBOOK"
+
+				SpawnTemplate SpellsGenerator
+
+				FireWeapon
+                {
+                    Delay 1 
+                    Cooldown 1 
+					Type "Action" 
+				}
+			}
+		}
+	}
+}
