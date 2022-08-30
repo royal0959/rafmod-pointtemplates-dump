@@ -30,10 +30,10 @@ function SpellGenerator(rareWeight, activator)
 	end
 
 	timerId = timer.Create(SPELL_GEN_INTERVAL, function ()
-		-- if not activator:IsAlive() then
+		if not activator:IsAlive() then
 		-- 	stopGenerator()
-		-- 	return
-		-- end
+			return
+		end
 
 		local gen = math.random(1, 100)
 
