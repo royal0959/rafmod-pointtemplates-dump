@@ -11,27 +11,201 @@ WaveSchedule
 	BotsDropSpells 1
 
 	LuaScriptFile "scripts/the_fat_request.lua"
-
-	PointTemplates
+	
+	Wave // Wave 1
 	{
-        SpellsGenerator
-        {
-            OnSpawnOutput
-            {
-                Target "popscript"
-                Action "$SpellGenerator"
-                Param "33" // chance for a rare spell roll, common spell roll is 100 minus sent value (i.e if rare is 33%, common is 67%)
-            }
-        }
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Class Sniper
+				Health 40000
+				Skill Expert
+				ClassIcon boss_merasmus_strapped
+				Name "Merasmus With A Gun"
+				UseCustomModel "models\bots\merasmus\merasmus.mdl"
+
+				Action Mobber
+
+				UseHumanModel 1
+				UseHumanAnimations 1
+
+				Skin 0
+
+				Item "TF_WEAPON_SPELLBOOK"
+
+				Attributes MiniBoss
+				Attributes UseBossHealthBar
+				Attributes AlwaysFireWeapon
+
+				ChangeAttributes   
+				{
+					Delay  0
+					Cooldown  18
+					Name  "SMG" 
+				}
+
+				ChangeAttributes   
+				{
+					Delay  6
+					Cooldown  18
+					Name  "SniperRifle" 
+				}
+
+				ChangeAttributes   
+				{
+					Delay  12
+					Cooldown  18
+					Name  "Magic" 
+				}
+
+				ItemAttributes
+				{
+					ItemName "TF_WEAPON_CLUB"
+					"is invisible" 1
+				}
+
+				CharacterAttributes
+				{
+					"move speed bonus"	0.3
+					"hand scale" 2
+					"damage force reduction" 0
+					"airblast vulnerability multiplier" 0
+					"override footstep sound set" 3
+					"airblast vertical vulnerability multiplier" 0	
+					"cancel falling damage" 1				
+				}
+
+				EventChangeAttributes
+				{
+					SMG
+					{
+						WeaponRestrictions SecondaryOnly
+
+						ItemAttributes
+						{
+							ItemName "tf_weapon_smg"
+							"clip size bonus" 10
+							"fire rate bonus" 0.6
+							"fire rate bonus with reduced health" 0.25
+							"faster reload rate" 1.5
+							"damage bonus" 2
+							"spread penalty" 1.7
+						}
+
+						//ItemAttributes
+						//{
+						//	ItemName "tf_weapon_rocketlauncher"
+						//	"is_passive_weapon" 0
+						//}
+					}
+					
+					SniperRifle
+					{
+						WeaponRestrictions PrimaryOnly
+						Item "The Machina"
+						ItemAttributes
+						{
+							ItemName "The Machina"
+							"sniper only fire zoomed" 0
+							"faster reload rate" 0.5
+						}
+					}
+
+					Magic
+					{
+						WeaponRestrictions MeleeOnly
+
+						FireInput
+						{
+							Delay 1
+							Cooldown 1
+
+							Target "popscript"
+							Action "$AddRandomSpell"
+							Param 33 // rare spell chance
+						}
+
+						FireInput
+						{
+							Delay 1
+							Cooldown 1
+
+							Target "popscript"
+							Action "$AddRandomSpell"
+							Param 33 // rare spell chance
+						}
+
+						FireWeapon  
+						{
+							Delay 1.1
+							Cooldown 1 
+							Type "Action" 
+						}
+						FireInput
+						{
+							Delay 1.11
+							Cooldown 1
+
+							Target "!activator"
+							Action "$AddPlayerAttribute"
+							Param "disable weapon switch|1" 
+						}
+						FireInput
+						{
+							Delay 1.5
+							Cooldown 1
+
+							Target "!activator"
+							Action "$RemovePlayerAttribute"
+							Param "disable weapon switch" 
+						}
+
+						//Item "tf_weapon_rocketlauncher"
+
+						//ItemAttributes
+						//{
+						//	ItemName "tf_weapon_rocketlauncher"
+						//	"projectile trail particle"	"spell_fireball_small_red"
+						//	"custom projectile model" "models/weapons/w_models/w_drg_ball.mdl"
+						//	"projectile speed increased" 0.4
+						//	"projectile spread angle penalty" 20
+						//	"mod projectile heat seek power" 35
+						//	"mod projectile heat aim error" 90
+						//	"mod projectile heat aim time" 4
+						//	"Set DamageType Ignite" 1
+						//	"mult projectile count" 20
+						//	"damage bonus" 0.75
+						//	"faster reload rate" -0.4
+						//	"fire rate bonus" 6
+						//	"is_passive_weapon" 1
+						//	"is invisible" 1
+						//}
+					}
+				}
+			}
+		}
 	}
-
-	ForceItem "TF_WEAPON_SPELLBOOK"
-
-	PlayerSpawnTemplate
-	{
-		Name SpellsGenerator
-	}
-
 	Wave // Wave 1
 	{
 		StartWaveOutput
@@ -59,15 +233,24 @@ WaveSchedule
 			TFBot
 			{
 				Class Demoman
-
 				Item "TF_WEAPON_SPELLBOOK"
 
-				SpawnTemplate SpellsGenerator
+				// WeaponRestrictions PrimaryOnly
 
-				FireWeapon
-                {
-                    Delay 1 
-                    Cooldown 1 
+				FireInput
+				{
+					Delay 1
+					Cooldown 1
+
+					Target "popscript"
+					Action "$AddRandomSpell"
+					Param 33 // rare spell chance
+				}
+
+				FireWeapon  
+				{
+					Delay 1.1
+					Cooldown 1 
 					Type "Action" 
 				}
 			}
