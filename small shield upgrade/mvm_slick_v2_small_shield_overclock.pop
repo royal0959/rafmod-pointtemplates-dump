@@ -1,0 +1,122 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 5
+
+	PrecacheModel "models/props_mvm/mvm_comically_small_player_shield.mdl"
+
+	LuaScriptFile "scripts/small_shield_overclock.lua"
+
+	// block buying personal projectile shield is normal shield is bought
+	DisallowUpgrade
+	{
+		Upgrade	"cannot giftwrap" 
+		MaxLevel 0 
+		IfUpgradePresent 
+		{
+			"generate rage on heal" 1 
+		}
+	}
+
+
+	ExtendedUpgrades
+	{
+		smol_shield
+		{
+			Name "Personal Projectile Shield"
+			Description "Smaller shield that charges faster and deal heavy contact damage" 
+			Attribute "cannot giftwrap" 
+			Cap 2 
+			Increment 2
+			Cost 350
+
+			AllowedWeapons 
+			{
+				ClassName "TF_WEAPON_MEDIGUN"
+			}
+
+			SecondaryAttributes
+			{
+				"generate rage on heal" 2
+				"dmg penalty vs players" 1.5 //50% damage bonus
+			}
+
+			// these are required
+			OnApply
+			{
+				Output "popscript,$PersonalProjectileShieldPurchase,,0"
+			}
+			OnDowngrade
+			{
+				Output "popscript,$PersonalProjectileShieldRefunded,,0"
+			}
+		}
+	}
+
+	Wave // Wave 1
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Heavyweapons
+				Attributes SuppressFire
+			}
+		}
+	}
+	Wave // Wave 2
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Heavyweapons
+				Attributes SuppressFire
+			}
+		}
+	}
+}
