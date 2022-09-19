@@ -66,6 +66,13 @@ WaveSchedule
 				Delay 5
 			}
 
+			filter_activator_tfteam 
+			{
+				"targetname" "filter_is_red"
+				"Negated" "0"
+				"TeamNum" "2"
+			}	
+			
 			logic_relay 
 			{
 				"targetname" "target_check"
