@@ -47,6 +47,10 @@ function PersonalProjectileShieldPurchase(_, activator)
 	end)
 
 	callbacks.died = activator:AddCallback(ON_DEATH, function()
+		if medigunHandle == activator:GetPlayerItemBySlot(1):GetHandleIndex() then
+			return
+		end
+
 		clear()
 	end)
 
