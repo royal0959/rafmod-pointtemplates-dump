@@ -1,0 +1,109 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 5
+
+	LuaScriptFile "scripts/deflect_rage_airblast.lua"
+
+	ExtendedUpgrades
+	{
+		smol_shield
+		{
+			Name "placeholder name for shortcircuit airblast"
+			Description "weee" 
+			Attribute "cannot giftwrap" 
+			Cap 1 
+			Increment 1
+			Cost 0
+
+			AllowedWeapons 
+			{
+				ItemName "The Phlogistinator"
+			}
+
+			// these are required
+			OnApply
+			{
+				// DR stands for deflect rage
+				Output "popscript,$DR_Purchased,,0"
+			}
+			OnDowngrade
+			{
+				Output "popscript,$PersonalProjectileShieldRefunded,,0"
+			}
+		}
+	}
+
+	Wave // Wave 1
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Soldier_Spammer
+				CharacterAttributes
+				{
+					"Projectile speed increased" 0.3
+				}
+			}
+		}
+	}
+	Wave // Wave 2
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Soldier_Spammer
+				CharacterAttributes
+				{
+					"Projectile speed increased" 0.3
+				}
+			}
+		}
+	}
+}

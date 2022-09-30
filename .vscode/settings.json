@@ -36,6 +36,8 @@
 		"DMG_BURN",
 		"DMG_MELEE",
 		"ON_KEY_RELEASED",
-		"TickCount"
+		"TickCount",
+		"MASK_SOLID",
+		"COLLISION_GROUP_DEBRIS"
 	],
 }
