@@ -34,6 +34,8 @@
 		"DMG_CRITICAL",
 		"ON_DAMAGE_RECEIVED_PRE",
 		"DMG_BURN",
-		"DMG_MELEE"
+		"DMG_MELEE",
+		"ON_KEY_RELEASED",
+		"TickCount"
 	],
 }
