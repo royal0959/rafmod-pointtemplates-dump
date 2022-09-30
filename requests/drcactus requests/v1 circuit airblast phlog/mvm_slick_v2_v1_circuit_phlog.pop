@@ -11,7 +11,7 @@ WaveSchedule
 
 	ExtendedUpgrades
 	{
-		smol_shield
+		circuit_phlog
 		{
 			Name "placeholder name for shortcircuit airblast"
 			Description "weee" 

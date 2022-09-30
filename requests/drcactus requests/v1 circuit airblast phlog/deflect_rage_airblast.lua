@@ -1,7 +1,10 @@
 local AMMO_COST = 25
 local COOLDOWN = 1
+local RAGE_GAIN_PER_PROJECTILE = 10
 
-local AIRBLAST_RANGE = 200
+local DEFLECT_PARTICLE = "ExplosionCore_sapperdestroyed"
+
+local AIRBLAST_RANGE = 100
 
 local DEFLECTABLE_PROJECTILES = {"tf_projectile_pipe", "tf_projectile_pipe_remote", "tf_projectile_rocket"
 , "tf_projectile_sentryrocket"}
@@ -28,6 +31,8 @@ function DR_Refunded(_, activator)
 	for _, id in pairs(callbacks) do
 		activator:RemoveCallback(id)
 	end
+
+	DR_callbacks[handle] = nil
 end
 
 local _DEFLECTABLE_INDEX = {}
@@ -48,6 +53,15 @@ local function DR_Blast(activator)
 	if clip < AMMO_COST then
 		return
 	end
+
+	local handle = activator:GetHandleIndex()
+	if cooldowns[handle] then
+		if CurTime() < cooldowns[handle] then
+			return
+		end
+	end
+
+	cooldowns[handle] = CurTime() + COOLDOWN
 
 	-- disable attacking while airblast animation plays
 	weapon:SetAttributeValue("no_attack", 1)
@@ -79,12 +93,16 @@ local function DR_Blast(activator)
 	local trace = util.Trace(DefaultTraceInfo)
 
 	-- util.ParticleEffect("ExplosionCore_buildings", trace.HitPos, nil)
-
-	for _, ent in pairs(ents.FindInSphere(origin, AIRBLAST_RANGE)) do
+	local bonusRage = 0
+	for _, ent in pairs(ents.FindInSphere(trace.HitPos, AIRBLAST_RANGE)) do
 		if _DEFLECTABLE_INDEX[ent.m_iClassname] then
+			util.ParticleEffect(DEFLECT_PARTICLE, ent:GetAbsOrigin())
 			ent:Remove()
+			bonusRage = bonusRage + RAGE_GAIN_PER_PROJECTILE
 		end
 	end
+
+	return bonusRage
 end
 
 function DR_Purchased(_, activator)
@@ -94,6 +112,12 @@ function DR_Purchased(_, activator)
 	DR_callbacks[handle] = callbacks
 
 	local primary = activator:GetPlayerItemBySlot(0)
+
+	-- for i = 0, 2 do
+	-- 	activator:GetPlayerItemBySlot(i):SetAttributeValue("mod rage on hit penalty", 0)
+	-- end
+
+	local rage = 0
 
 	local held = false
 
@@ -121,6 +145,38 @@ function DR_Purchased(_, activator)
 		end
 	end
 
+	local function addRage(amount)
+		if not amount then
+			return
+		end
+
+		rage = rage + amount
+
+		activator.m_flRageMeter = rage
+
+		if rage > 100 then
+			rage = 100
+		end
+	end
+
+	timer.Create(0.01, function ()
+		if not IsValid(activator) then
+			return true
+		end
+
+		if not DR_callbacks[handle] then
+			return true
+		end
+
+		if activator.m_bRageDraining == 1 then
+			-- allow rage to be extended by deflecting during
+			rage = activator.m_flRageMeter
+			return
+		end
+
+		activator.m_flRageMeter = rage
+	end, 0)
+
 	callbacks.onPress = activator:AddCallback(ON_KEY_PRESSED, function(_, key)
 		if held then
 			return
@@ -130,14 +186,18 @@ function DR_Purchased(_, activator)
 			return
 		end
 
-		DR_Blast(activator)
+		if rage >= 100 then
+			return
+		end
+
+		addRage(DR_Blast(activator))
 
 		held = timer.Create(0.1, function ()
 			if not IsValid(activator) then
 				return true -- cancel
 			end
 
-			DR_Blast(activator)
+			addRage(DR_Blast(activator))
 		end, 0)
 	end)
 
