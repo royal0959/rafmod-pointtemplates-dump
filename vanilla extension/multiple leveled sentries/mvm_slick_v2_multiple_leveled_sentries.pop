@@ -1,0 +1,119 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 5
+
+	LuaScriptFile "scripts/multiple_leveled_sentries.lua"
+
+	DisallowUpgrade
+	{
+		Upgrade	"cannot giftwrap" 
+		MaxLevel 0 
+		IfUpgradePresent 
+		{
+			"engy disposable sentries" 1 
+		}
+	}
+
+	ExtendedUpgrades
+	{
+		multiple_sentries
+		{
+			Name "Split-Buildingnality Disorder"
+			Description "Able to build a sentry upgradeable sentry, reduce sentry damage by 50%" 
+			Attribute "cannot giftwrap" 
+			Cap 1 
+			Increment 1
+			Cost 250
+
+			AllowedWeapons 
+			{
+				ClassName "TF_WEAPON_PDA_ENGINEER_BUILD"
+			}
+
+			SecondaryAttributes
+			{
+				"engy disposable sentries" 1
+				"engy sentry damage bonus" 0.5
+			}
+
+			// these are required
+			OnApply
+			{
+				Output "popscript,$SplitSentryBought,,0"
+			}
+			OnDowngrade
+			{
+				Output "popscript,$SplitSentryRefunded,,0"
+			}
+		}
+	}
+
+
+	Wave // Wave 1
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Heavyweapons
+				Attributes SuppressFire
+			}
+		}
+	}
+	Wave // Wave 2
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Heavyweapons
+				Attributes SuppressFire
+			}
+		}
+	}
+}
