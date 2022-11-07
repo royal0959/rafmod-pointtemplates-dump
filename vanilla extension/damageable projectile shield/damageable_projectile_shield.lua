@@ -1,4 +1,4 @@
-local DAMAGE_MULT = 0.03 -- remember that shield takes full rampup damage regardless of distance
+local DAMAGE_MULT = 0.02 -- remember that shield takes full rampup damage regardless of distance
 
 local function handleShield(shieldEnt)
 	local owner = shieldEnt.m_hOwnerEntity
