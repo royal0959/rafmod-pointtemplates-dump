@@ -17,7 +17,7 @@ end
 
 function LaserOnAim(_, activator)
 	local laser = ents.CreateWithKeys("info_particle_system", {
-		effect_name = "laser_sight_beam", -- laser_sight_beam -- asplode_hoodoo
+		effect_name = "laser_sight_beam",
 		start_active = 0,
 		flag_as_weather = 0,
 	})
@@ -40,8 +40,8 @@ function LaserOnAim(_, activator)
 	-- who knows!
 	-- this is a bandaid to forcefully hide the lasers out of sight (and out of mind. don't think about it)
 	local function hideLaser()
-		laser:SetAbsOrigin(Vector(0, 0, -10000))
-		pointer:SetAbsOrigin(Vector(0, 0, -10000))
+		laser:SetAbsOrigin(Vector(0, 0, -1000))
+		pointer:SetAbsOrigin(Vector(0, 0, -1000))
 		color:SetAbsOrigin(Vector(0, 0, 0))
 
 		laser:Stop()
@@ -52,9 +52,14 @@ function LaserOnAim(_, activator)
 		removeCallbacks(activator, callbacks)
 
 		hideLaser()
-		laser:Remove()
-		pointer:Remove()
-		color:Remove()
+		for _, e in pairs( {laser, pointer, color}) do
+			if IsValid(e) then
+				e:Remove()
+			end
+		end
+		-- laser:Remove()
+		-- pointer:Remove()
+		-- color:Remove()
 	end
 
 	check = timer.Create(0.015, function()
@@ -68,9 +73,9 @@ function LaserOnAim(_, activator)
 			return
 		end
 
-		local origin = activator:GetAbsOrigin()
+		-- local origin = activator:GetAbsOrigin()
 
-		laser:SetAbsOrigin(origin + Vector(0, 0, 53))
+		-- laser:SetAbsOrigin(origin + Vector(0, 0, 53))
 
 		local eyeAngles = getEyeAngles(activator)
 
@@ -83,6 +88,7 @@ function LaserOnAim(_, activator)
 		}
 		local trace = util.Trace(DefaultTraceInfo)
 
+		laser:SetAbsOrigin(trace.StartPos)
 		pointer:SetAbsOrigin(trace.HitPos)
 
 		laser:Start()

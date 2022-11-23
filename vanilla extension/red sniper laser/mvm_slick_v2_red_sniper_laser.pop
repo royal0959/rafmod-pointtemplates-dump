@@ -59,7 +59,7 @@ WaveSchedule
 
 				Action Sniper
 
-				AddCond { Index 43 }
+				// AddCond { Index 43 }
 			}
 		}
 	}
