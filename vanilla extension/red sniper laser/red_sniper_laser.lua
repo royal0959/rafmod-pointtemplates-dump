@@ -40,29 +40,37 @@ function LaserOnAim(_, activator)
 	-- who knows!
 	-- this is a bandaid to forcefully hide the lasers out of sight (and out of mind. don't think about it)
 	local function hideLaser()
-		laser:SetAbsOrigin(Vector(0, 0, -1000))
-		pointer:SetAbsOrigin(Vector(0, 0, -1000))
+		laser:SetAbsOrigin(Vector(0, 0, -10000))
+		pointer:SetAbsOrigin(Vector(0, 0, -10000))
 		color:SetAbsOrigin(Vector(0, 0, 0))
 
 		laser:Stop()
 	end
 
 	local function terminate()
+		hideLaser()
+
 		timer.Stop(check)
 		removeCallbacks(activator, callbacks)
 
-		hideLaser()
-		for _, e in pairs( {laser, pointer, color}) do
-			if IsValid(e) then
-				e:Remove()
+		timer.Simple(0.1, function ()
+			for _, e in pairs( {laser, pointer, color}) do
+				if IsValid(e) then
+					e:Remove()
+				end
 			end
-		end
+		end)
 		-- laser:Remove()
 		-- pointer:Remove()
 		-- color:Remove()
 	end
 
 	check = timer.Create(0.015, function()
+		if activator.m_iTeamNum == 0 or activator.m_iTeamNum == 1 then
+			terminate()
+			return
+		end
+
 		if activator:InCond(0) ~= 1 then
 			if started then
 				hideLaser()
