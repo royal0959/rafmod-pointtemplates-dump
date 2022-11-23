@@ -46,9 +46,9 @@ WaveSchedule
 		{
 			Name "1"
 			Where spawnbot
-			TotalCount 50
-			MaxActive 22
-			SpawnCount 22
+			TotalCount 2
+			MaxActive 2
+			SpawnCount 2
 			WaitBeforeStarting 0
 			WaitBetweenSpawns 0
 			TotalCurrency 0

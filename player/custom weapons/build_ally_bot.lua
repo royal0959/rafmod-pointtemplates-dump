@@ -7,6 +7,7 @@ function OnWaveInit()
 
 	for _, bot in pairs(activeBuiltBots) do
 		bot:Suicide()
+		bot.m_iTeamNum = 1
 	end
 
 	activeBuiltBots = {}
@@ -19,6 +20,26 @@ function OnWaveStart()
 	for _, bot in pairs(activeBuiltBots) do
 		bot.m_iTeamNum = 2
 	end
+
+	-- local objResource = ents.FindByClass("tf_objective_resource")
+
+	-- objResource.m_nMannVsMachineWaveEnemyCount = 1000
+
+	-- for i = 1, #objResource.m_nMannVsMachineWaveClassFlags  do
+	-- 	objResource:AcceptInput("$setprop$m_nMannVsMachineWaveClassFlags$" .. i - 1, 9)
+	-- end
+	-- for i = 1, #objResource.m_iszMannVsMachineWaveClassNames do
+	-- 	objResource:AcceptInput("$setprop$m_iszMannVsMachineWaveClassNames$" .. i - 1, "soldier_barrage")
+	-- end
+	-- for i = 1, #objResource.m_nMannVsMachineWaveClassCounts do
+	-- 	objResource:AcceptInput("$setprop$m_nMannVsMachineWaveClassCounts$" .. i - 1, 1)
+	-- end
+	-- for i = 1, #objResource.m_bMannVsMachineWaveClassActive do
+	-- 	objResource:AcceptInput("$setprop$m_bMannVsMachineWaveClassActive$" .. i - 1, true)
+	-- end
+	-- for i = 1, #objResource.m_bMannVsMachineWaveClassActive2 do
+	-- 	objResource:AcceptInput("$setprop$m_bMannVsMachineWaveClassActive2$" .. i - 1, true)
+	-- end
 end
 
 local function removeCallbacks(player, callbacks)
@@ -34,7 +55,15 @@ end
 local function forceSpawnBot(bot, owner, handle)
 	local callbacks = {}
 
+	-- print(bot.m_szNetname)
+
+	-- bot.m_szNetname = "Soldier ("..owner.m_szNetname..")"
+
+	-- print(bot.m_szNetname)
+
 	bot.m_iTeamNum = owner.m_iTeamNum
+	bot.m_nBotSkill = 4 -- expert
+	bot.m_iszClassIcon = "" -- don't remove from wave on death
 
 	activeBuiltBots[handle] = bot
 
@@ -52,7 +81,11 @@ local function findFreeBot()
 	local chosen
 
 	for _, bot in pairs(ents.GetAllPlayers()) do
-		if not bot:IsRealPlayer() and bot.m_iTeamNum == 1 then
+		if
+			not bot:IsRealPlayer()
+			and (bot.m_iTeamNum == 1 or bot.m_iTeamNum == 0)
+			and bot:GetPlayerName() ~= "Demo-Bot"
+		then
 			chosen = bot
 			break
 		end
@@ -85,11 +118,6 @@ function SentrySpawned(_, building)
 		botSpawn:SetAbsOrigin(origin)
 		botSpawn:SwitchClassInPlace("Soldier")
 
-		print(botSpawn.m_szNetname)
-
-		botSpawn.m_szNetname = "Soldier ("..owner.m_szNetname..")"
-
-		print(botSpawn.m_szNetname)
 		if not inWave then
 			botSpawn.m_iTeamNum = 1
 		end
