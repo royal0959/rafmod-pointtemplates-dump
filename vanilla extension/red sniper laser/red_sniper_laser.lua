@@ -20,10 +20,15 @@ function LaserOnAim(_, activator)
 		effect_name = "laser_sight_beam",
 		start_active = 0,
 		flag_as_weather = 0,
-	})
+	}, false)
+
+	laser:SetName("le_laser")
 
 	local pointer = Entity("info_particle_system", true)
 	local color = Entity("info_particle_system", true)
+
+	pointer:SetName("le_laserpointer")
+	color:SetName("le_lasercolor")
 
 	color:SetAbsOrigin(Vector(255, 0, 0))
 
@@ -40,33 +45,46 @@ function LaserOnAim(_, activator)
 	-- who knows!
 	-- this is a bandaid to forcefully hide the lasers out of sight (and out of mind. don't think about it)
 	local function hideLaser()
-		laser:SetAbsOrigin(Vector(0, 0, -10000))
-		pointer:SetAbsOrigin(Vector(0, 0, -10000))
-		color:SetAbsOrigin(Vector(0, 0, 0))
+		if not IsValid(laser) then
+			-- print("nah")
+			return
+		end
 
 		laser:Stop()
+
+		laser:SetAbsOrigin(pointer:GetAbsOrigin())
 	end
 
+	local terminated = false
+
 	local function terminate()
-		hideLaser()
+		if terminated then
+			return
+		end
+
+		terminated = true
 
 		timer.Stop(check)
 		removeCallbacks(activator, callbacks)
 
-		timer.Simple(0.1, function ()
-			for _, e in pairs( {laser, pointer, color}) do
+		hideLaser()
+
+		timer.Simple(0.1, function()
+			for _, e in pairs({ laser, pointer, color }) do
 				if IsValid(e) then
 					e:Remove()
 				end
 			end
 		end)
-		-- laser:Remove()
-		-- pointer:Remove()
-		-- color:Remove()
 	end
 
 	check = timer.Create(0.015, function()
 		if activator.m_iTeamNum == 0 or activator.m_iTeamNum == 1 then
+			terminate()
+			return
+		end
+
+		if not IsValid(activator) or not activator:IsAlive() then
 			terminate()
 			return
 		end
@@ -80,10 +98,6 @@ function LaserOnAim(_, activator)
 
 			return
 		end
-
-		-- local origin = activator:GetAbsOrigin()
-
-		-- laser:SetAbsOrigin(origin + Vector(0, 0, 53))
 
 		local eyeAngles = getEyeAngles(activator)
 
