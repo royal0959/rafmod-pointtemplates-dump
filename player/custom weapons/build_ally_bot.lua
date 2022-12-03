@@ -1,3 +1,17 @@
+--[[
+	REQUIRED: 
+		-"FixSetCustomModelInput 1" in wave schedule
+
+	OPTIONAL:
+		-Up to 6 extra bots slot
+]]
+--
+
+local BOTS_ATTRIBUTES = {
+	["not solid to players"] = 1,
+	["collect currency on kill"] = 1,
+}
+
 local activeBuiltBots = {}
 
 local inWave = false
@@ -52,29 +66,59 @@ local function removeCallbacks(player, callbacks)
 	end
 end
 
-local function forceSpawnBot(bot, owner, handle)
+local function getEyeAngles(player)
+	local pitch = player["m_angEyeAngles[0]"]
+	local yaw = player["m_angEyeAngles[1]"]
+
+	return Vector(pitch, yaw, 0)
+end
+
+local function getCursorPos(player)
+	local eyeAngles = getEyeAngles(player)
+
+	local DefaultTraceInfo = {
+		start = player,
+		distance = 10000,
+		angles = eyeAngles,
+		mask = MASK_SOLID,
+		collisiongroup = COLLISION_GROUP_DEBRIS,
+	}
+	local trace = util.Trace(DefaultTraceInfo)
+	return trace.HitPos
+end
+
+local function forceSpawnBot(bot, owner, handle, building)
 	local callbacks = {}
 
-	-- print(bot.m_szNetname)
+	local displayName = "Soldier (" .. owner.m_szNetname .. ")"
+	bot.m_szNetname = displayName
 
-	-- bot.m_szNetname = "Soldier ("..owner.m_szNetname..")"
-
-	-- print(bot.m_szNetname)
+	bot:SetFakeClientConVar("name", displayName)
 
 	bot.m_iTeamNum = owner.m_iTeamNum
 	bot.m_nBotSkill = 4 -- expert
 	bot.m_iszClassIcon = "" -- don't remove from wave on death
 
+	for name, value in pairs(BOTS_ATTRIBUTES) do
+		bot:SetAttributeValue(name, value)
+	end
+
 	activeBuiltBots[handle] = bot
 
+	callbacks.damaged = bot:AddCallback(ON_DAMAGE_RECEIVED_POST, function()
+		building.m_iHealth = bot.m_iHealth
+	end)
 	callbacks.died = bot:AddCallback(ON_DEATH, function()
-		-- activeBuiltBots[handle] = nil -- causes issues I think
+		activeBuiltBots[handle] = nil
 		bot.m_iTeamNum = 1
+
 		removeCallbacks(bot, callbacks)
+		if IsValid(building) then
+			building:Remove()
+		end
 	end)
-	callbacks.spawned = bot:AddCallback(ON_SPAWN, function()
-		removeCallbacks(bot, callbacks)
-	end)
+
+	return callbacks
 end
 
 local function findFreeBot()
@@ -94,33 +138,105 @@ local function findFreeBot()
 	return chosen
 end
 
+-- TODO: replace player's sentry with a spawned sentry to skip the deploy animation
 function SentrySpawned(_, building)
 	local owner = building.m_hBuilder
 	local handle = owner:GetHandleIndex()
 
 	local origin = building:GetAbsOrigin()
 
-	building:Remove()
+	building:SetAbsOrigin(Vector(0, 0, -10000))
+	building:Hide()
 
 	if activeBuiltBots[handle] and activeBuiltBots[handle]:IsAlive() then
+		building:Remove()
 		return
 	end
 
 	local botSpawn = findFreeBot()
 
 	if not botSpawn then
+		building:Remove()
 		return
 	end
 
-	forceSpawnBot(botSpawn, owner, handle)
+	local callbacks = forceSpawnBot(botSpawn, owner, handle, building)
 
 	timer.Simple(0, function()
 		botSpawn:SetAbsOrigin(origin)
 		botSpawn:SwitchClassInPlace("Soldier")
+		botSpawn:SetCustomModelWithClassAnimations("models/bots/soldier/bot_soldier.mdl")
+
+		-- set max health
+		building.m_iMaxHealth = botSpawn.m_iHealth
+
+		building:AddCallback(ON_REMOVE, function()
+			if not activeBuiltBots[handle] then
+				return
+			end
+
+			botSpawn:Suicide()
+		end)
 
 		if not inWave then
 			botSpawn.m_iTeamNum = 1
 		end
+
+		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
+			removeCallbacks(botSpawn, callbacks)
+			if IsValid(building) then
+				building:Remove()
+			end
+		end)
+
+		-- bot behavior
+		-- default behavior is always following you
+		local logicLoop
+		logicLoop = timer.Create(0.2, function()
+			if not activeBuiltBots[handle] then
+				timer.Stop(logicLoop)
+				return
+			end
+
+			if owner.m_hActiveWeapon.m_iClassname == "tf_weapon_laser_pointer" then
+				-- wrangle behavior:
+				-- look toward cursor
+				-- if alt fire is held: move toward cursor
+
+				local altFireHeld = owner.m_nButtons & IN_ATTACK2 ~= 0
+				-- local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
+
+				local cursorPos = getCursorPos(owner)
+
+				local stringStart = "interrupt_action_queue"
+				if altFireHeld then
+					stringStart = stringStart
+						.. (" -pos %s %s %s"):format(cursorPos[1], cursorPos[2], cursorPos[3])
+				end
+
+				local stringMiddle = ("-lookpos %s %s %s "):format(cursorPos[1], cursorPos[2], cursorPos[3])
+
+				-- if attackHeld then
+				-- 	stringMiddle = stringMiddle .. " -killlook"
+				-- end
+
+				local interruptAction = ("%s %s -duration 0.1"):format(stringStart, stringMiddle)
+
+				botSpawn["$BotCommand"](botSpawn, interruptAction)
+
+				return
+			end
+
+			local pos = owner:GetAbsOrigin()
+
+			local interruptAction = ("interrupt_action_queue -pos %s %s %s -duration 0.1"):format(
+				pos[1],
+				pos[2],
+				pos[3]
+			)
+
+			botSpawn["$BotCommand"](botSpawn, interruptAction)
+		end, 0)
 	end)
 
 	-- table.insert(activeBuiltBots, botSpawn)

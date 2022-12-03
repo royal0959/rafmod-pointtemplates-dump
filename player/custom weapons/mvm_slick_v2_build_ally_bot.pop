@@ -7,6 +7,8 @@ WaveSchedule
 	CanBotsAttackWhileInSpawnRoom no
 	RespawnWaveTime 0
 
+	FixSetCustomModelInput 1
+
 	LuaScriptFile "scripts/build_ally_bot.lua"
 
 	PointTemplates 
