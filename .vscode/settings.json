@@ -42,6 +42,7 @@
 		"ON_DEPLOY_WEAPON",
 		"ON_HOLSTER_WEAPON",
 		"PRINT_TARGET_CHAT",
-		"convar"
+		"convar",
+		"TF_COND_ENERGY_BUFF"
 	],
 }

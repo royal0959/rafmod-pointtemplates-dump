@@ -33,6 +33,7 @@ function OnWaveStart()
 	-- bots spawned in prewave are put to spectate/gray team so they don't take up slot
 	for _, bot in pairs(activeBuiltBots) do
 		bot.m_iTeamNum = 2
+		bot:RemoveCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 	end
 
 	-- local objResource = ents.FindByClass("tf_objective_resource")
@@ -127,6 +128,7 @@ local function findFreeBot()
 	for _, bot in pairs(ents.GetAllPlayers()) do
 		if
 			not bot:IsRealPlayer()
+			and not bot:IsAlive()
 			and (bot.m_iTeamNum == 1 or bot.m_iTeamNum == 0)
 			and bot:GetPlayerName() ~= "Demo-Bot"
 		then
@@ -139,6 +141,7 @@ local function findFreeBot()
 end
 
 -- TODO: replace player's sentry with a spawned sentry to skip the deploy animation
+-- TODO: make bot unable to be targeted by sentry during prewave
 function SentrySpawned(_, building)
 	local owner = building.m_hBuilder
 	local handle = owner:GetHandleIndex()
@@ -180,6 +183,7 @@ function SentrySpawned(_, building)
 
 		if not inWave then
 			botSpawn.m_iTeamNum = 1
+			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 		end
 
 		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
@@ -189,51 +193,91 @@ function SentrySpawned(_, building)
 			end
 		end)
 
+		-- local aimPointerName = "BotAimPointer" .. tostring(handle)
+		-- local aimPointer = Entity("info_particle_system", true)
+		-- aimPointer:SetName(aimPointerName)
+
+		-- local forceAngleLoop
+		-- forceAngleLoop = timer.Create(0.015, function()
+		-- 	if not activeBuiltBots[handle] then
+		-- 		timer.Stop(forceAngleLoop)
+		-- 		return
+		-- 	end
+
+		-- 	if not owner:IsAlive() then
+		-- 		return
+		-- 	end
+
+		-- 	if owner.m_hActiveWeapon.m_iClassname ~= "tf_weapon_laser_pointer" then
+		-- 		return
+		-- 	end
+
+		-- 	-- botSpawn:FaceEntity(aimPointer)
+		-- 	botSpawn:SnapEyeAngles(getEyeAngles(owner))
+		-- end, 0)
+
 		-- bot behavior
 		-- default behavior is always following you
 		local logicLoop
 		logicLoop = timer.Create(0.2, function()
 			if not activeBuiltBots[handle] then
 				timer.Stop(logicLoop)
+				-- if IsValid(aimPointer) then
+				-- 	aimPointer:Remove()
+				-- end
+				return
+			end
+
+			if not owner:IsAlive() then
 				return
 			end
 
 			if owner.m_hActiveWeapon.m_iClassname == "tf_weapon_laser_pointer" then
 				-- wrangle behavior:
-				-- look toward cursor
-				-- if alt fire is held: move toward cursor
+				-- if attack is held: move toward cursor
 
-				local altFireHeld = owner.m_nButtons & IN_ATTACK2 ~= 0
-				-- local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
+				-- local altFireHeld = owner.m_nButtons & IN_ATTACK2 ~= 0
+				botSpawn:AddCond(TF_COND_ENERGY_BUFF)
 
-				local cursorPos = getCursorPos(owner)
+				local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
 
-				local stringStart = "interrupt_action_queue"
-				if altFireHeld then
-					stringStart = stringStart
-						.. (" -pos %s %s %s"):format(cursorPos[1], cursorPos[2], cursorPos[3])
+				if attackHeld then
+					local cursorPos = getCursorPos(owner)
+					-- aimPointer:SetAbsOrigin(cursorPos)
+
+					local interruptAction = ("interrupt_action -pos %s %s %s -distance 1 -duration 0.1"):format(
+						cursorPos[1],
+						cursorPos[2],
+						cursorPos[3]
+					)
+
+					botSpawn["$BotCommand"](botSpawn, interruptAction)
 				end
 
-				local stringMiddle = ("-lookpos %s %s %s "):format(cursorPos[1], cursorPos[2], cursorPos[3])
+				-- local stringStart = "interrupt_action_queue"
+				-- if attackHeld then
+				-- 	stringStart = stringStart
+				-- 		.. (" -pos %s %s %s -distance 1"):format(cursorPos[1], cursorPos[2], cursorPos[3])
+				-- end
+
+				-- local stringMiddle = ("-lookposent %s -alwayslook"):format(aimPointerName)
 
 				-- if attackHeld then
 				-- 	stringMiddle = stringMiddle .. " -killlook"
 				-- end
 
-				local interruptAction = ("%s %s -duration 0.1"):format(stringStart, stringMiddle)
+				-- local interruptAction = ("%s %s -duration 0.19"):format(stringStart, stringMiddle)
 
-				botSpawn["$BotCommand"](botSpawn, interruptAction)
+				-- botSpawn["$BotCommand"](botSpawn, interruptAction)
 
 				return
 			end
 
+			botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
+
 			local pos = owner:GetAbsOrigin()
 
-			local interruptAction = ("interrupt_action_queue -pos %s %s %s -duration 0.1"):format(
-				pos[1],
-				pos[2],
-				pos[3]
-			)
+			local interruptAction = ("interrupt_action -pos %s %s %s -duration 0.1"):format(pos[1], pos[2], pos[3])
 
 			botSpawn["$BotCommand"](botSpawn, interruptAction)
 		end, 0)
