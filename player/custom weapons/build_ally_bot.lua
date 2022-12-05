@@ -13,6 +13,7 @@ local BOTS_ATTRIBUTES = {
 }
 
 local activeBuiltBots = {}
+local activeBuiltBotsOwner = {}
 
 local inWave = false
 
@@ -59,6 +60,37 @@ function OnWaveStart()
 	-- 	objResource:AcceptInput("$setprop$m_bMannVsMachineWaveClassActive2$" .. i - 1, true)
 	-- end
 end
+
+-- convert damage dealt by bots to owner
+local function addGlobalDamageCallback(player)
+	player:AddCallback(ON_DAMAGE_RECEIVED_PRE, function(_, damageinfo)
+		local attacker = damageinfo.Attacker
+
+		if not attacker then
+			return
+		end
+
+		local handle = attacker:GetHandleIndex()
+
+		local owner = activeBuiltBotsOwner[handle]
+
+		if not owner then
+			return
+		end
+
+		damageinfo.Attacker = owner
+
+		return true
+	end)
+end
+
+function OnPlayerConnected(player)
+	addGlobalDamageCallback(player)
+end
+
+-- for _, player in pairs(ents.GetAllPlayers()) do
+-- 	addGlobalDamageCallback(player)
+-- end
 
 local function removeCallbacks(player, callbacks)
 	if not IsValid(player) then
@@ -127,6 +159,8 @@ end
 local function forceSpawnBot(bot, owner, handle, building)
 	local callbacks = {}
 
+	local botHandle = bot:GetHandleIndex()
+
 	local displayName = "Soldier (" .. owner.m_szNetname .. ")"
 	bot.m_szNetname = displayName
 
@@ -141,12 +175,14 @@ local function forceSpawnBot(bot, owner, handle, building)
 	end
 
 	activeBuiltBots[handle] = bot
+	activeBuiltBotsOwner[botHandle] = owner
 
 	callbacks.damaged = bot:AddCallback(ON_DAMAGE_RECEIVED_POST, function()
 		building.m_iHealth = bot.m_iHealth
 	end)
 	callbacks.died = bot:AddCallback(ON_DEATH, function()
 		activeBuiltBots[handle] = nil
+		activeBuiltBotsOwner[botHandle] = nil
 		bot.m_iTeamNum = 1
 
 		removeCallbacks(bot, callbacks)
@@ -222,7 +258,7 @@ function SentrySpawned(_, building)
 			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 			botSpawn:SetAttributeValue("ignored by enemy sentries", 1)
 			botSpawn:SetAttributeValue("ignored by bots", 1)
-			-- botSpawn:SetAttributeValue("no_attack", 1)
+			botSpawn:SetAttributeValue("no_attack", 1)
 		end
 
 		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
@@ -288,7 +324,7 @@ function SentrySpawned(_, building)
 
 				local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
 
-			 	cursorPos = getCursorPos(owner)
+				cursorPos = getCursorPos(owner)
 				-- aimPointer:SetAbsOrigin(cursorPos)
 
 				if attackHeld then

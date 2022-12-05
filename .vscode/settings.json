@@ -43,6 +43,8 @@
 		"ON_HOLSTER_WEAPON",
 		"PRINT_TARGET_CHAT",
 		"convar",
-		"TF_COND_ENERGY_BUFF"
+		"TF_COND_ENERGY_BUFF",
+		"AddEventCallback",
+		"ACTION_MODIFY"
 	],
 }
