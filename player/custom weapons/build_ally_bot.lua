@@ -77,6 +77,39 @@ local function getEyeAngles(player)
 	return Vector(pitch, yaw, 0)
 end
 
+local atan = math.atan
+local sqrt = math.sqrt
+local pi = math.pi
+
+-- ported from C:\Users\Admin\Documents\GitHub\sigsegv-mvm\src\sdk2013\mathlib_base.cpp
+local function vectorAngles(forward)
+	local yaw, pitch
+
+	if forward[2] == 0 and forward[1] == 0 then
+		yaw = 0
+		if forward[3] > 0 then
+			pitch = 270
+		else
+			pitch = 90
+		end
+	else
+		yaw = (atan(forward[2], forward[1]) * 180 / pi)
+		if yaw < 0 then
+			yaw = yaw + 360
+		end
+
+		local tmp = sqrt(forward[1] * forward[1] + forward[2] * forward[2])
+		tmp = forward[3] > 0 and tmp or -tmp
+
+		pitch = (atan(-forward[3], tmp) * 180 / pi)
+		if pitch < 0 then
+			pitch = pitch + 360
+		end
+	end
+
+	return Vector(pitch, yaw, 0)
+end
+
 local function getCursorPos(player)
 	local eyeAngles = getEyeAngles(player)
 
@@ -189,7 +222,7 @@ function SentrySpawned(_, building)
 			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 			botSpawn:SetAttributeValue("ignored by enemy sentries", 1)
 			botSpawn:SetAttributeValue("ignored by bots", 1)
-			botSpawn:SetAttributeValue("no_attack", 1)
+			-- botSpawn:SetAttributeValue("no_attack", 1)
 		end
 
 		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
@@ -203,8 +236,10 @@ function SentrySpawned(_, building)
 		-- local aimPointer = Entity("info_particle_system", true)
 		-- aimPointer:SetName(aimPointerName)
 
+		local cursorPos = Vector(0, 0, 0)
+
 		-- local forceAngleLoop
-		-- forceAngleLoop = timer.Create(0.015, function()
+		-- forceAngleLoop = timer.Create(0, function()
 		-- 	if not activeBuiltBots[handle] then
 		-- 		timer.Stop(forceAngleLoop)
 		-- 		return
@@ -219,7 +254,13 @@ function SentrySpawned(_, building)
 		-- 	end
 
 		-- 	-- botSpawn:FaceEntity(aimPointer)
-		-- 	botSpawn:SnapEyeAngles(getEyeAngles(owner))
+		-- 	-- botSpawn:SnapEyeAngles(getEyeAngles(owner))
+
+		-- 	local delta = cursorPos - botSpawn:GetAbsOrigin()
+		-- 	local angles = vectorAngles(delta)
+
+		-- 	botSpawn:SetAbsAngles(angles)
+		-- 	botSpawn:SnapEyeAngles(angles)
 		-- end, 0)
 
 		-- bot behavior
@@ -247,35 +288,32 @@ function SentrySpawned(_, building)
 
 				local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
 
-				if attackHeld then
-					local cursorPos = getCursorPos(owner)
-					-- aimPointer:SetAbsOrigin(cursorPos)
+			 	cursorPos = getCursorPos(owner)
+				-- aimPointer:SetAbsOrigin(cursorPos)
 
+				if attackHeld then
 					local interruptAction = ("interrupt_action -pos %s %s %s -distance 1 -duration 0.1"):format(
 						cursorPos[1],
 						cursorPos[2],
 						cursorPos[3]
 					)
 
-					botSpawn["$BotCommand"](botSpawn, interruptAction)
+					botSpawn:BotCommand(interruptAction)
 				end
 
 				-- local stringStart = "interrupt_action_queue"
-				-- if attackHeld then
+				-- if altFireHeld then
 				-- 	stringStart = stringStart
 				-- 		.. (" -pos %s %s %s -distance 1"):format(cursorPos[1], cursorPos[2], cursorPos[3])
 				-- end
 
-				-- local stringMiddle = ("-lookposent %s -alwayslook"):format(aimPointerName)
-
 				-- if attackHeld then
-				-- 	stringMiddle = stringMiddle .. " -killlook"
+				-- 	stringStart = stringStart .. " -killlook"
 				-- end
 
-				-- local interruptAction = ("%s %s -duration 0.19"):format(stringStart, stringMiddle)
+				-- local interruptAction = ("%s -duration 0.1"):format(stringStart)
 
-				-- botSpawn["$BotCommand"](botSpawn, interruptAction)
-
+				-- botSpawn:BotCommand(interruptAction)
 				return
 			end
 
@@ -285,7 +323,7 @@ function SentrySpawned(_, building)
 
 			local interruptAction = ("interrupt_action -pos %s %s %s -duration 0.1"):format(pos[1], pos[2], pos[3])
 
-			botSpawn["$BotCommand"](botSpawn, interruptAction)
+			botSpawn:BotCommand(interruptAction)
 		end, 0)
 	end)
 
