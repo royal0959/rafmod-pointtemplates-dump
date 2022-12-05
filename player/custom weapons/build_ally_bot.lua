@@ -78,6 +78,10 @@ local function addGlobalDamageCallback(player)
 			return
 		end
 
+		if player == owner then
+			return
+		end
+
 		damageinfo.Attacker = owner
 
 		return true
