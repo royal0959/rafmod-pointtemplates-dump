@@ -357,6 +357,11 @@ function SentrySpawned(_, building)
 
 			local pos = owner:GetAbsOrigin()
 
+			-- don't move if already close
+			if pos:Distance(botSpawn:GetAbsOrigin()) <= 150 then
+				return
+			end
+
 			local interruptAction = ("interrupt_action -pos %s %s %s -duration 0.1"):format(pos[1], pos[2], pos[3])
 
 			botSpawn:BotCommand(interruptAction)
