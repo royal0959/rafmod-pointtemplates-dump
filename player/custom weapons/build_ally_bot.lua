@@ -34,6 +34,9 @@ function OnWaveStart()
 	for _, bot in pairs(activeBuiltBots) do
 		bot.m_iTeamNum = 2
 		bot:RemoveCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
+		bot:SetAttributeValue("ignored by enemy sentries", nil)
+		bot:SetAttributeValue("ignored by bots", nil)
+		bot:SetAttributeValue("no_attack", nil)
 	end
 
 	-- local objResource = ents.FindByClass("tf_objective_resource")
@@ -184,6 +187,9 @@ function SentrySpawned(_, building)
 		if not inWave then
 			botSpawn.m_iTeamNum = 1
 			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
+			botSpawn:SetAttributeValue("ignored by enemy sentries", 1)
+			botSpawn:SetAttributeValue("ignored by bots", 1)
+			botSpawn:SetAttributeValue("no_attack", 1)
 		end
 
 		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
