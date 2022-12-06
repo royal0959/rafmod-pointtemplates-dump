@@ -7,6 +7,19 @@
 ]]
 --
 
+local logic_script = Entity("logic_script")
+
+print(logic_script)
+
+-- logic_script:AddOutput("vscripts \"tf/scripts/vscripts/build_ally_bot.nut\"")
+-- logic_script:RunScriptFile("tf/scripts/vscripts/build_ally_bot")
+logic_script:RunScriptFile("build_ally_bot.nut")
+logic_script:CallScriptFunction("printSomethingDammit")
+-- logic_script:RunScriptFile("build_ally_bot")
+-- logic_script:RunScriptFile("build_ally_bot.nut")
+
+-- logic_script:RunScriptCode("printl(1)")
+
 local BOTS_ATTRIBUTES = {
 	["not solid to players"] = 1,
 	["collect currency on kill"] = 1,
