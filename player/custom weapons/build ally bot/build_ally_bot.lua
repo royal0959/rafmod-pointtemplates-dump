@@ -7,19 +7,6 @@
 ]]
 --
 
-local logic_script = Entity("logic_script")
-
-print(logic_script)
-
--- logic_script:AddOutput("vscripts \"tf/scripts/vscripts/build_ally_bot.nut\"")
--- logic_script:RunScriptFile("tf/scripts/vscripts/build_ally_bot")
-logic_script:RunScriptFile("build_ally_bot.nut")
-logic_script:CallScriptFunction("printSomethingDammit")
--- logic_script:RunScriptFile("build_ally_bot")
--- logic_script:RunScriptFile("build_ally_bot.nut")
-
--- logic_script:RunScriptCode("printl(1)")
-
 local BOTS_ATTRIBUTES = {
 	["not solid to players"] = 1,
 	["collect currency on kill"] = 1,
@@ -178,10 +165,12 @@ local function forceSpawnBot(bot, owner, handle, building)
 
 	local botHandle = bot:GetHandleIndex()
 
-	local displayName = "Soldier (" .. owner.m_szNetname .. ")"
-	bot.m_szNetname = displayName
+	-- local displayName = "Soldier (" .. owner.m_szNetname .. ")"
+	-- bot.m_szNetname = displayName
 
-	bot:SetFakeClientConVar("name", displayName)
+	-- bot:RunScriptFile("build_ally_bot.nut")
+	-- bot:CallScriptFunction("forceNameToNetName")
+	-- bot:SetFakeClientConVar("name", displayName)
 
 	bot.m_iTeamNum = owner.m_iTeamNum
 	bot.m_nBotSkill = 4 -- expert
@@ -268,6 +257,14 @@ function SentrySpawned(_, building)
 			end
 
 			botSpawn:Suicide()
+		end)
+
+		timer.Simple(1, function ()
+			local displayName = "Soldier (" .. owner.m_szNetname .. ")"
+			botSpawn.m_szNetname = displayName
+
+			botSpawn:RunScriptFile("rename_to_netname.nut", botSpawn, botSpawn)
+			-- botSpawn:CallScriptFunction("forceNameToNetName", botSpawn, botSpawn)
 		end)
 
 		if not inWave then
