@@ -193,6 +193,10 @@ local function setupBot(bot, owner, handle, building)
 		bot:SetAttributeValue(name, value)
 	end
 
+	-- bot:AddModule("rotator")
+	-- bot["$lookat"] = "center"
+	-- bot["$projectilespeed"] = 1100
+
 	activeBuiltBots[handle] = bot
 	activeBuiltBotsOwner[botHandle] = owner
 
@@ -203,6 +207,8 @@ local function setupBot(bot, owner, handle, building)
 		activeBuiltBots[handle] = nil
 		activeBuiltBotsOwner[botHandle] = nil
 		bot.m_iTeamNum = 1
+
+		-- bot:RemoveModule("rotator")
 
 		removeCallbacks(bot, callbacks)
 		if IsValid(building) then
@@ -246,11 +252,17 @@ end
 -- finds closest bot to use as target, TODO: prioritize medics and spies
 -- TODO: ray check
 local function getBotTarget(bot, owner)
+	local botTeam = bot.m_iTeamNum
+
+	-- don't target anything in pre wave
+	if botTeam == 1 then
+		return owner
+	end
+
 	local closest = { nil, 1000000 }
 
 	local players = ents.GetAllPlayers()
 
-	local botTeam = bot.m_iTeamNum
 	local botOrigin = bot:GetAbsOrigin()
 
 	local origin
@@ -361,6 +373,10 @@ function SentrySpawned(_, building)
 		local aimPointer = Entity("info_particle_system", true)
 		aimPointer:SetName(aimPointerName)
 
+		local killPointerName = "BotKillPointer" .. tostring(handle)
+		local killPointer = Entity("info_particle_system", true)
+		killPointer:SetName(killPointerName)
+
 		local cursorPos = Vector(0, 0, 0)
 
 		-- local function forceLookAtCursor()
@@ -406,6 +422,9 @@ function SentrySpawned(_, building)
 				timer.Stop(logicLoop)
 				if IsValid(aimPointer) then
 					aimPointer:Remove()
+				end
+				if IsValid(killPointer) then
+					killPointer:Remove()
 				end
 				return
 			end
@@ -472,17 +491,19 @@ function SentrySpawned(_, building)
 
 			local lookTarget = getBotTarget(botSpawn, owner)
 			local lookTargetPos = lookTarget:GetAbsOrigin()
+
+			killPointer:SetAbsOrigin(lookTargetPos)
+
 			local pos = owner:GetAbsOrigin()
 
-			local stringStart = ("interrupt_action -lookpos %s %s %s"):format(
-				lookTargetPos[1],
-				lookTargetPos[2],
-				lookTargetPos[3]
+			local stringStart = ("interrupt_action -lookposent %s -waituntildone"):format(
+				killPointerName
 			)
 
-			-- force target if not facing owner
+			-- force attack target if not facing owner
 			if lookTarget ~= owner then
-				botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
+				-- botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
+				stringStart = stringStart.." -killlook"
 			end
 
 			-- don't move if already close
