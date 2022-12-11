@@ -12,6 +12,14 @@ local BOTS_ATTRIBUTES = {
 	["collect currency on kill"] = 1,
 }
 
+-- we can't expect lua to do all the work - joshua graham
+local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(4)"
+local BOT_DISABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(0.1)"
+local BOT_ENABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(100000)"
+-- local BOT_CLEAR_FOCUS = "activator.ClearAttentionFocus()"
+
+local BOT_ATTACK_VSCRIPT = "activator.PressFireButton(0.1)"
+
 local activeBuiltBots = {}
 local activeBuiltBotsOwner = {}
 
@@ -37,7 +45,7 @@ function OnWaveStart()
 		bot:RemoveCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 		bot:SetAttributeValue("ignored by enemy sentries", nil)
 		bot:SetAttributeValue("ignored by bots", nil)
-		bot:SetAttributeValue("no_attack", nil)
+		bot:SetAttributeValue("dmg penalty vs players", nil)
 	end
 
 	-- local objResource = ents.FindByClass("tf_objective_resource")
@@ -130,17 +138,17 @@ local function vectorAngles(forward)
 		end
 	else
 		yaw = (atan(forward[2], forward[1]) * 180 / pi)
-		if yaw < 0 then
-			yaw = yaw + 360
-		end
+		-- if yaw < 0 then
+		-- 	yaw = yaw + 360
+		-- end
 
 		local tmp = sqrt(forward[1] * forward[1] + forward[2] * forward[2])
 		tmp = forward[3] > 0 and tmp or -tmp
 
 		pitch = (atan(-forward[3], tmp) * 180 / pi)
-		if pitch < 0 then
-			pitch = pitch + 360
-		end
+		-- if pitch < 0 then
+		-- 	pitch = pitch + 360
+		-- end
 	end
 
 	return Vector(pitch, yaw, 0)
@@ -160,20 +168,18 @@ local function getCursorPos(player)
 	return trace.HitPos
 end
 
-local function forceSpawnBot(bot, owner, handle, building)
+local function setupBot(bot, owner, handle, building)
 	local callbacks = {}
 
 	local botHandle = bot:GetHandleIndex()
 
-	-- local displayName = "Soldier (" .. owner.m_szNetname .. ")"
-	-- bot.m_szNetname = displayName
+	local displayName = "Soldier (" .. owner.m_szNetname .. ")"
+	bot.m_szNetname = displayName
 
-	-- bot:RunScriptFile("build_ally_bot.nut")
-	-- bot:CallScriptFunction("forceNameToNetName")
-	-- bot:SetFakeClientConVar("name", displayName)
+	bot:SetFakeClientConVar("name", displayName)
 
 	bot.m_iTeamNum = owner.m_iTeamNum
-	bot.m_nBotSkill = 4 -- expert
+
 	bot.m_iszClassIcon = "" -- don't remove from wave on death
 
 	for name, value in pairs(BOTS_ATTRIBUTES) do
@@ -241,12 +247,15 @@ function SentrySpawned(_, building)
 		return
 	end
 
-	local callbacks = forceSpawnBot(botSpawn, owner, handle, building)
+	local callbacks = setupBot(botSpawn, owner, handle, building)
 
 	timer.Simple(0, function()
 		botSpawn:SetAbsOrigin(origin)
 		botSpawn:SwitchClassInPlace("Soldier")
 		botSpawn:SetCustomModelWithClassAnimations("models/bots/soldier/bot_soldier.mdl")
+
+		-- bot.m_nBotSkill = 4 -- expert
+		botSpawn:RunScriptCode(BOT_SETUP_VSCRIPT, botSpawn, botSpawn)
 
 		-- set max health
 		building.m_iMaxHealth = botSpawn.m_iHealth
@@ -259,20 +268,20 @@ function SentrySpawned(_, building)
 			botSpawn:Suicide()
 		end)
 
-		timer.Simple(1, function ()
-			local displayName = "Soldier (" .. owner.m_szNetname .. ")"
-			botSpawn.m_szNetname = displayName
+		-- timer.Simple(1, function ()
+		-- 	local displayName = "Soldier (" .. owner.m_szNetname .. ")"
+		-- 	botSpawn.m_szNetname = displayName
 
-			botSpawn:RunScriptFile("rename_to_netname.nut", botSpawn, botSpawn)
-			-- botSpawn:CallScriptFunction("forceNameToNetName", botSpawn, botSpawn)
-		end)
+		-- 	botSpawn:RunScriptFile("rename_to_netname.nut", botSpawn, botSpawn)
+		-- 	-- botSpawn:CallScriptFunction("forceNameToNetName", botSpawn, botSpawn)
+		-- end)
 
 		if not inWave then
 			botSpawn.m_iTeamNum = 1
 			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 			botSpawn:SetAttributeValue("ignored by enemy sentries", 1)
 			botSpawn:SetAttributeValue("ignored by bots", 1)
-			botSpawn:SetAttributeValue("no_attack", 1)
+			botSpawn:SetAttributeValue("dmg penalty vs players", 0.0001)
 		end
 
 		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
@@ -287,6 +296,14 @@ function SentrySpawned(_, building)
 		-- aimPointer:SetName(aimPointerName)
 
 		local cursorPos = Vector(0, 0, 0)
+
+		local function forceLookAtCursor()
+			local delta = cursorPos - botSpawn:GetAbsOrigin()
+			local angles = vectorAngles(delta)
+	
+			botSpawn:SetAbsAngles(angles)
+			botSpawn:SnapEyeAngles(angles)
+		end
 
 		-- local forceAngleLoop
 		-- forceAngleLoop = timer.Create(0, function()
@@ -313,6 +330,8 @@ function SentrySpawned(_, building)
 		-- 	botSpawn:SnapEyeAngles(angles)
 		-- end, 0)
 
+		local lastWrangled = false
+
 		-- bot behavior
 		-- default behavior is always following you
 		local logicLoop
@@ -333,41 +352,58 @@ function SentrySpawned(_, building)
 				-- wrangle behavior:
 				-- if attack is held: move toward cursor
 
-				-- local altFireHeld = owner.m_nButtons & IN_ATTACK2 ~= 0
-				botSpawn:AddCond(TF_COND_ENERGY_BUFF)
+				if not lastWrangled then
+					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
+					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
 
+					lastWrangled = true
+				end
+
+				local altFireHeld = owner.m_nButtons & IN_ATTACK2 ~= 0
 				local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
 
 				cursorPos = getCursorPos(owner)
 				-- aimPointer:SetAbsOrigin(cursorPos)
 
-				if attackHeld then
-					local interruptAction = ("interrupt_action -pos %s %s %s -distance 1 -duration 0.1"):format(
-						cursorPos[1],
-						cursorPos[2],
-						cursorPos[3]
-					)
+				-- if attackHeld then
+				-- 	local interruptAction = ("interrupt_action -pos %s %s %s -distance 1 -duration 0.1"):format(
+				-- 		cursorPos[1],
+				-- 		cursorPos[2],
+				-- 		cursorPos[3]
+				-- 	)
 
-					botSpawn:BotCommand(interruptAction)
+				-- 	botSpawn:BotCommand(interruptAction)
+				-- end
+
+				if attackHeld then
+					-- forceLookAtCursor()
+					botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
 				end
 
+				local stringStart = ("interrupt_action -lookpos %s %s %s"):format(
+					cursorPos[1],
+					cursorPos[2],
+					cursorPos[3]
+				)
 				-- local stringStart = "interrupt_action_queue"
-				-- if altFireHeld then
-				-- 	stringStart = stringStart
-				-- 		.. (" -pos %s %s %s -distance 1"):format(cursorPos[1], cursorPos[2], cursorPos[3])
-				-- end
 
-				-- if attackHeld then
-				-- 	stringStart = stringStart .. " -killlook"
-				-- end
+				if altFireHeld then
+					stringStart = stringStart
+						.. (" -pos %s %s %s -distance 1"):format(cursorPos[1], cursorPos[2], cursorPos[3])
+				end
 
-				-- local interruptAction = ("%s -duration 0.1"):format(stringStart)
+				local interruptAction = ("%s -duration 0.15"):format(stringStart)
 
-				-- botSpawn:BotCommand(interruptAction)
+				botSpawn:BotCommand(interruptAction)
 				return
 			end
 
-			botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
+			if lastWrangled then
+				botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
+				botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
+
+				lastWrangled = false
+			end
 
 			local pos = owner:GetAbsOrigin()
 
@@ -391,7 +427,7 @@ end
 -- 			goto continue
 -- 		end
 
--- 		forceSpawnBot(player)
+-- 		setupBot(player)
 
 -- 		::continue::
 -- 	end
