@@ -291,9 +291,9 @@ function SentrySpawned(_, building)
 			end
 		end)
 
-		-- local aimPointerName = "BotAimPointer" .. tostring(handle)
-		-- local aimPointer = Entity("info_particle_system", true)
-		-- aimPointer:SetName(aimPointerName)
+		local aimPointerName = "BotAimPointer" .. tostring(handle)
+		local aimPointer = Entity("info_particle_system", true)
+		aimPointer:SetName(aimPointerName)
 
 		local cursorPos = Vector(0, 0, 0)
 
@@ -338,9 +338,9 @@ function SentrySpawned(_, building)
 		logicLoop = timer.Create(0.2, function()
 			if not activeBuiltBots[handle] then
 				timer.Stop(logicLoop)
-				-- if IsValid(aimPointer) then
-				-- 	aimPointer:Remove()
-				-- end
+				if IsValid(aimPointer) then
+					aimPointer:Remove()
+				end
 				return
 			end
 
@@ -353,8 +353,15 @@ function SentrySpawned(_, building)
 				-- if attack is held: move toward cursor
 
 				if not lastWrangled then
+					botSpawn:BotCommand("stop interrupt action")
+
 					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
 					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
+
+					-- local interrupt = ("interrupt_action -lookposent %s -waituntildone -alwayslook -duration 4200000"):format(
+					-- 	aimPointerName
+					-- )
+					-- botSpawn:BotCommand(interrupt)
 
 					lastWrangled = true
 				end
@@ -363,42 +370,34 @@ function SentrySpawned(_, building)
 				local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
 
 				cursorPos = getCursorPos(owner)
-				-- aimPointer:SetAbsOrigin(cursorPos)
-
-				-- if attackHeld then
-				-- 	local interruptAction = ("interrupt_action -pos %s %s %s -distance 1 -duration 0.1"):format(
-				-- 		cursorPos[1],
-				-- 		cursorPos[2],
-				-- 		cursorPos[3]
-				-- 	)
-
-				-- 	botSpawn:BotCommand(interruptAction)
-				-- end
+				aimPointer:SetAbsOrigin(cursorPos)
 
 				if attackHeld then
 					-- forceLookAtCursor()
 					botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
 				end
 
-				local stringStart = ("interrupt_action -lookpos %s %s %s"):format(
-					cursorPos[1],
-					cursorPos[2],
-					cursorPos[3]
-				)
-				-- local stringStart = "interrupt_action_queue"
+				-- local stringStart = ("interrupt_action -lookpos %s %s %s"):format(
+				-- 	cursorPos[1],
+				-- 	cursorPos[2],
+				-- 	cursorPos[3]
+				-- )
+				local stringStart = ("interrupt_action -lookposent %s -waituntildone -alwayslook"):format(aimPointerName)
 
 				if altFireHeld then
 					stringStart = stringStart
 						.. (" -pos %s %s %s -distance 1"):format(cursorPos[1], cursorPos[2], cursorPos[3])
 				end
 
-				local interruptAction = ("%s -duration 0.15"):format(stringStart)
+				local interruptAction = ("%s -duration 420000"):format(stringStart)
 
 				botSpawn:BotCommand(interruptAction)
 				return
 			end
 
 			if lastWrangled then
+				botSpawn:BotCommand("stop interrupt action")
+
 				botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
 				botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
 
