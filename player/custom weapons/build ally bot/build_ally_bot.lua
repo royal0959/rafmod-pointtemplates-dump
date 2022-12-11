@@ -11,6 +11,12 @@ local BOTS_ATTRIBUTES = {
 	["not solid to players"] = 1,
 	["collect currency on kill"] = 1,
 }
+local BOTS_WRANGLED_ATTRIBUTES = {
+	-- ["CARD: damage bonus"] = 1.3,
+	["fire rate bonus HIDDEN"] = 0.9,
+	["Reload time increased"] = 0.9,
+	["SET BONUS: move speed set bonus"] = 1.3,
+}
 
 -- we can't expect lua to do all the work - joshua graham
 local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(4)"
@@ -300,7 +306,7 @@ function SentrySpawned(_, building)
 		local function forceLookAtCursor()
 			local delta = cursorPos - botSpawn:GetAbsOrigin()
 			local angles = vectorAngles(delta)
-	
+
 			botSpawn:SetAbsAngles(angles)
 			botSpawn:SnapEyeAngles(angles)
 		end
@@ -350,7 +356,8 @@ function SentrySpawned(_, building)
 
 			if owner.m_hActiveWeapon.m_iClassname == "tf_weapon_laser_pointer" then
 				-- wrangle behavior:
-				-- if attack is held: move toward cursor
+				-- if attack is held: fire weapon
+				-- if alt fire is held: move toward cursor
 
 				if not lastWrangled then
 					botSpawn:BotCommand("stop interrupt action")
@@ -358,10 +365,9 @@ function SentrySpawned(_, building)
 					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
 					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
 
-					-- local interrupt = ("interrupt_action -lookposent %s -waituntildone -alwayslook -duration 4200000"):format(
-					-- 	aimPointerName
-					-- )
-					-- botSpawn:BotCommand(interrupt)
+					for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+						botSpawn:SetAttributeValue(name, value)
+					end
 
 					lastWrangled = true
 				end
@@ -373,16 +379,12 @@ function SentrySpawned(_, building)
 				aimPointer:SetAbsOrigin(cursorPos)
 
 				if attackHeld then
-					-- forceLookAtCursor()
 					botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
 				end
 
-				-- local stringStart = ("interrupt_action -lookpos %s %s %s"):format(
-				-- 	cursorPos[1],
-				-- 	cursorPos[2],
-				-- 	cursorPos[3]
-				-- )
-				local stringStart = ("interrupt_action -lookposent %s -waituntildone -alwayslook"):format(aimPointerName)
+				local stringStart = ("interrupt_action -lookposent %s -waituntildone -alwayslook"):format(
+					aimPointerName
+				)
 
 				if altFireHeld then
 					stringStart = stringStart
@@ -396,6 +398,10 @@ function SentrySpawned(_, building)
 			end
 
 			if lastWrangled then
+				for name, _ in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+					botSpawn:SetAttributeValue(name, nil)
+				end
+
 				botSpawn:BotCommand("stop interrupt action")
 
 				botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
