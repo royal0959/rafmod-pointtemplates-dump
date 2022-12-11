@@ -45,6 +45,7 @@
 		"convar",
 		"TF_COND_ENERGY_BUFF",
 		"AddEventCallback",
-		"ACTION_MODIFY"
+		"ACTION_MODIFY",
+		"TFCOLLISION_GROUP_ROCKETS"
 	],
 }

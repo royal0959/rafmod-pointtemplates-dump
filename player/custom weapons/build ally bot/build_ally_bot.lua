@@ -169,7 +169,7 @@ local function getCursorPos(player)
 		distance = 10000,
 		angles = eyeAngles,
 		mask = MASK_SOLID,
-		collisiongroup = COLLISION_GROUP_DEBRIS,
+		collisiongroup = TFCOLLISION_GROUP_ROCKETS ,--COLLISION_GROUP_DEBRIS,
 	}
 	local trace = util.Trace(DefaultTraceInfo)
 	return trace.HitPos
