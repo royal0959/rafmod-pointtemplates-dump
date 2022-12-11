@@ -10,6 +10,7 @@
 local BOTS_ATTRIBUTES = {
 	["not solid to players"] = 1,
 	["collect currency on kill"] = 1,
+	["ammo regen"] = 10
 }
 local BOTS_WRANGLED_ATTRIBUTES = {
 	-- ["CARD: damage bonus"] = 1.3,
@@ -19,9 +20,9 @@ local BOTS_WRANGLED_ATTRIBUTES = {
 }
 
 -- we can't expect lua to do all the work - joshua graham
-local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(4)"
-local BOT_DISABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(0.1)"
-local BOT_ENABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(100000)"
+local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(4); activator.SetMaxVisionRangeOverride(0.1)"
+-- local BOT_DISABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(0.1)"
+-- local BOT_ENABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(100000)"
 -- local BOT_CLEAR_FOCUS = "activator.ClearAttentionFocus()"
 
 local BOT_ATTACK_VSCRIPT = "activator.PressFireButton(0.1)"
@@ -230,8 +231,67 @@ local function findFreeBot()
 	return chosen
 end
 
+local function traceBetween(player, originTarget)
+	local DefaultTraceInfo = {
+		start = player,
+		endpos = originTarget,
+		mask = MASK_SOLID,
+		collisiongroup = COLLISION_GROUP_DEBRIS,
+	}
+	local trace = util.Trace(DefaultTraceInfo)
+
+	return trace.Hit
+end
+
+-- finds closest bot to use as target, TODO: prioritize medics and spies
+-- TODO: ray check
+local function getBotTarget(bot, owner)
+	local closest = { nil, 1000000 }
+
+	local players = ents.GetAllPlayers()
+
+	local botTeam = bot.m_iTeamNum
+	local botOrigin = bot:GetAbsOrigin()
+
+	local origin
+	local distance
+
+	local function validateTarget(player)
+		if not player:IsAlive() then
+			return
+		end
+
+		if player.m_iTeamNum == botTeam then
+			return
+		end
+
+		origin = player:GetAbsOrigin()
+		distance = origin:Distance(botOrigin)
+
+		if distance > closest[2] then
+			return
+		end
+
+		if traceBetween(bot, origin) then
+			return
+		end
+
+		closest = { player, distance }
+	end
+
+	for _, player in pairs(players) do
+		validateTarget(player)
+	end
+
+	if not closest[1] then
+		-- if no target was found, have the bot look at its owner
+		return owner
+	end
+
+	return closest[1]
+end
+
 -- TODO: replace player's sentry with a spawned sentry to skip the deploy animation
--- TODO: make bot unable to be targeted by sentry during prewave
 function SentrySpawned(_, building)
 	local owner = building.m_hBuilder
 	local handle = owner:GetHandleIndex()
@@ -303,13 +363,13 @@ function SentrySpawned(_, building)
 
 		local cursorPos = Vector(0, 0, 0)
 
-		local function forceLookAtCursor()
-			local delta = cursorPos - botSpawn:GetAbsOrigin()
-			local angles = vectorAngles(delta)
+		-- local function forceLookAtCursor()
+		-- 	local delta = cursorPos - botSpawn:GetAbsOrigin()
+		-- 	local angles = vectorAngles(delta)
 
-			botSpawn:SetAbsAngles(angles)
-			botSpawn:SnapEyeAngles(angles)
-		end
+		-- 	botSpawn:SetAbsAngles(angles)
+		-- 	botSpawn:SnapEyeAngles(angles)
+		-- end
 
 		-- local forceAngleLoop
 		-- forceAngleLoop = timer.Create(0, function()
@@ -362,7 +422,7 @@ function SentrySpawned(_, building)
 				if not lastWrangled then
 					botSpawn:BotCommand("stop interrupt action")
 
-					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
+					-- botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
 					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
 
 					for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
@@ -404,20 +464,34 @@ function SentrySpawned(_, building)
 
 				botSpawn:BotCommand("stop interrupt action")
 
-				botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
+				-- botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
 				botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
 
 				lastWrangled = false
 			end
 
+			local lookTarget = getBotTarget(botSpawn, owner)
+			local lookTargetPos = lookTarget:GetAbsOrigin()
 			local pos = owner:GetAbsOrigin()
+
+			local stringStart = ("interrupt_action -lookpos %s %s %s"):format(
+				lookTargetPos[1],
+				lookTargetPos[2],
+				lookTargetPos[3]
+			)
+
+			-- force target if not facing owner
+			if lookTarget ~= owner then
+				botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
+			end
 
 			-- don't move if already close
 			if pos:Distance(botSpawn:GetAbsOrigin()) <= 150 then
+				botSpawn:BotCommand(stringStart.." -duration 0.1")
 				return
 			end
 
-			local interruptAction = ("interrupt_action -pos %s %s %s -duration 0.1"):format(pos[1], pos[2], pos[3])
+			local interruptAction = ("%s -pos %s %s %s -duration 0.1"):format(stringStart, pos[1], pos[2], pos[3])
 
 			botSpawn:BotCommand(interruptAction)
 		end, 0)
