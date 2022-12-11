@@ -250,7 +250,6 @@ local function traceBetween(player, originTarget)
 end
 
 -- finds closest bot to use as target, TODO: prioritize medics and spies
--- TODO: ray check
 local function getBotTarget(bot, owner)
 	local botTeam = bot.m_iTeamNum
 
@@ -303,29 +302,37 @@ local function getBotTarget(bot, owner)
 	return closest[1]
 end
 
--- TODO: replace player's sentry with a spawned sentry to skip the deploy animation
 function SentrySpawned(_, building)
 	local owner = building.m_hBuilder
 	local handle = owner:GetHandleIndex()
 
 	local origin = building:GetAbsOrigin()
 
-	building:SetAbsOrigin(Vector(0, 0, -10000))
-	building:Hide()
+	local newBuilding = ents.CreateWithKeys("obj_sentrygun", {
+		defaultupgrade = 0,
+		team = owner.m_iTeamNum,
+		SolidToPlayer = 0,
+	}, true)
+
+	building:Remove()
+	newBuilding:SetBuilder(owner, owner, owner)
+
+	newBuilding:SetAbsOrigin(Vector(0, 0, -10000))
+	newBuilding:Disable()
 
 	if activeBuiltBots[handle] and activeBuiltBots[handle]:IsAlive() then
-		building:Remove()
+		newBuilding:Remove()
 		return
 	end
 
 	local botSpawn = findFreeBot()
 
 	if not botSpawn then
-		building:Remove()
+		newBuilding:Remove()
 		return
 	end
 
-	local callbacks = setupBot(botSpawn, owner, handle, building)
+	local callbacks = setupBot(botSpawn, owner, handle, newBuilding)
 
 	timer.Simple(0, function()
 		botSpawn:SetAbsOrigin(origin)
@@ -336,9 +343,10 @@ function SentrySpawned(_, building)
 		botSpawn:RunScriptCode(BOT_SETUP_VSCRIPT, botSpawn, botSpawn)
 
 		-- set max health
-		building.m_iMaxHealth = botSpawn.m_iHealth
+		newBuilding.m_iMaxHealth = botSpawn.m_iHealth
+		newBuilding.m_iHealth = botSpawn.m_iHealth
 
-		building:AddCallback(ON_REMOVE, function()
+		newBuilding:AddCallback(ON_REMOVE, function()
 			if not activeBuiltBots[handle] then
 				return
 			end
@@ -364,8 +372,8 @@ function SentrySpawned(_, building)
 
 		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
 			removeCallbacks(botSpawn, callbacks)
-			if IsValid(building) then
-				building:Remove()
+			if IsValid(newBuilding) then
+				newBuilding:Remove()
 			end
 		end)
 
