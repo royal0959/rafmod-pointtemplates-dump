@@ -1,16 +1,44 @@
---[[
-	REQUIRED: 
-		-"FixSetCustomModelInput 1" in wave schedule
+-- TODO: notify player if bot can't be built because robot limit is reached
 
-	OPTIONAL:
-		-Up to 6 extra bots slot
-]]
---
+local BOTS_VARIANTS = {
+	soldier = {
+		Display = "Soldier",
+		Class = "Soldier",
+		Model = "models/bots/soldier/bot_soldier.mdl",
+
+		DefaultAttributes = {},
+
+		Tiers = {
+			[2] = {
+				Display = "Sergeant Crits",
+				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
+				Scale = 1.9,
+
+				Conds = {37},
+
+				Items = {"Tyrant's Helm"},
+
+				Attributes = {
+					["damage bonus"] = 1.5,
+					["faster reload rate"] = -0.6,
+					["fire rate bonus"] = 0.2,
+					["clip size upgrade atomic"] = 30.0,
+					["Projectile speed increased"] = 0.7,
+					["move speed bonus"] = 0.5,
+
+					["damage force reduction"] = 0.4,
+					["airblast vulnerability multiplier"] = 0.4,
+					["override footstep sound set"] = 3,
+				},
+			},
+		},
+	},
+}
 
 local BOTS_ATTRIBUTES = {
 	["not solid to players"] = 1,
 	["collect currency on kill"] = 1,
-	["ammo regen"] = 10
+	["ammo regen"] = 10,
 }
 local BOTS_WRANGLED_ATTRIBUTES = {
 	-- ["CARD: damage bonus"] = 1.3,
@@ -20,7 +48,7 @@ local BOTS_WRANGLED_ATTRIBUTES = {
 }
 
 -- we can't expect lua to do all the work - joshua graham
-local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(4); activator.SetMaxVisionRangeOverride(0.1)"
+local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(0.1)"
 -- local BOT_DISABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(0.1)"
 -- local BOT_ENABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(100000)"
 -- local BOT_CLEAR_FOCUS = "activator.ClearAttentionFocus()"
@@ -169,10 +197,57 @@ local function getCursorPos(player)
 		distance = 10000,
 		angles = eyeAngles,
 		mask = MASK_SOLID,
-		collisiongroup = TFCOLLISION_GROUP_ROCKETS ,--COLLISION_GROUP_DEBRIS,
+		collisiongroup = TFCOLLISION_GROUP_ROCKETS, --COLLISION_GROUP_DEBRIS,
 	}
 	local trace = util.Trace(DefaultTraceInfo)
 	return trace.HitPos
+end
+
+local function applyName(bot, name, owner)
+	local displayName = name.." (" .. owner.m_szNetname .. ")"
+	bot.m_szNetname = displayName
+
+	bot:SetFakeClientConVar("name", displayName)
+end
+
+local function applyTierData(bot, data)
+	if data.Model then
+		bot:SetCustomModelWithClassAnimations(data.Model)
+	end
+
+	if data.Scale then
+		local vscript = ("activator.SetScaleOverride(%s)"):format(tostring(data.Scale))
+		bot:RunScriptCode(vscript, bot)
+	end
+	
+	if data.Conds then
+		for _, id in pairs(data.Conds) do
+			bot:AddCond(id)
+		end
+	end
+
+	if data.Items then
+		for _, itemName in pairs(data.Items) do
+			bot:GiveItem(itemName)
+		end
+	end
+
+	if data.Attributes then
+		for name, value in pairs(data.Attributes) do
+			bot:SetAttributeValue(name, value)
+		end
+	end
+
+	if data.Display then
+		applyName(bot, data.Display, activeBuiltBotsOwner[bot:GetHandleIndex()])
+	end
+end
+
+local function applyBotTier(bot, class, tier)
+	-- TODO: remove previous tier's stuff like items conds and attributes
+	local tierData = BOTS_VARIANTS[class].Tiers[tier]
+
+	applyTierData(bot, tierData)
 end
 
 local function setupBot(bot, owner, handle, building)
@@ -180,10 +255,11 @@ local function setupBot(bot, owner, handle, building)
 
 	local botHandle = bot:GetHandleIndex()
 
-	local displayName = "Soldier (" .. owner.m_szNetname .. ")"
-	bot.m_szNetname = displayName
+	-- local displayName = "Soldier (" .. owner.m_szNetname .. ")"
+	-- bot.m_szNetname = displayName
 
-	bot:SetFakeClientConVar("name", displayName)
+	-- bot:SetFakeClientConVar("name", displayName)
+	applyName(bot, "Soldier", owner)
 
 	bot.m_iTeamNum = owner.m_iTeamNum
 
@@ -338,6 +414,9 @@ function SentrySpawned(_, building)
 		botSpawn:SetAbsOrigin(origin)
 		botSpawn:SwitchClassInPlace("Soldier")
 		botSpawn:SetCustomModelWithClassAnimations("models/bots/soldier/bot_soldier.mdl")
+
+		-- for testing
+		applyBotTier(botSpawn, "soldier", 2)
 
 		-- bot.m_nBotSkill = 4 -- expert
 		botSpawn:RunScriptCode(BOT_SETUP_VSCRIPT, botSpawn, botSpawn)
@@ -504,19 +583,17 @@ function SentrySpawned(_, building)
 
 			local pos = owner:GetAbsOrigin()
 
-			local stringStart = ("interrupt_action -lookposent %s -waituntildone"):format(
-				killPointerName
-			)
+			local stringStart = ("interrupt_action -lookposent %s -waituntildone"):format(killPointerName)
 
 			-- force attack target if not facing owner
 			if lookTarget ~= owner then
 				-- botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
-				stringStart = stringStart.." -killlook"
+				stringStart = stringStart .. " -killlook"
 			end
 
 			-- don't move if already close
 			if pos:Distance(botSpawn:GetAbsOrigin()) <= 150 then
-				botSpawn:BotCommand(stringStart.." -duration 0.1")
+				botSpawn:BotCommand(stringStart .. " -duration 0.1")
 				return
 			end
 

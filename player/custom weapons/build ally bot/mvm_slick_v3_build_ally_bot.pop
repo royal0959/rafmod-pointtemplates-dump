@@ -7,9 +7,25 @@ WaveSchedule
 	CanBotsAttackWhileInSpawnRoom no
 	RespawnWaveTime 0
 
-	FixSetCustomModelInput 1
+	// FixSetCustomModelInput 1
 
 	LuaScriptFile "scripts/build_ally_bot.lua"
+
+	CustomWeapon
+	{
+		"Portable Robotic Companion" 
+		{
+			OriginalItemName "The Gunslinger"
+		}
+	}
+
+	ExtraLoadoutItems 
+	{
+		Engineer
+		{
+			Melee "Portable Robotic Companion" 
+		}
+	}
 
 	PointTemplates 
 	{
@@ -48,9 +64,9 @@ WaveSchedule
 		{
 			Name "1"
 			Where spawnbot
-			TotalCount 2
-			MaxActive 2
-			SpawnCount 2
+			TotalCount 100
+			MaxActive 21
+			SpawnCount 21
 			WaitBeforeStarting 0
 			WaitBetweenSpawns 0
 			TotalCurrency 0
