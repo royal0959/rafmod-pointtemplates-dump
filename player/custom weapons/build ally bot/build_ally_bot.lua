@@ -8,26 +8,29 @@ local BOTS_VARIANTS = {
 
 		DefaultAttributes = {},
 
+		MaxHealth = 200,
+
 		Tiers = {
 			[2] = {
-				Display = "Soldier MK. II",
-				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
+				Display = "Direct Hit Soldier",
 				Scale = 1.1,
 
-				Items = {"Stainless Pot"},
+				MaxHealth = 250,
+
+				Items = {"The Direct Hit", "Stainless Pot"},
 
 				Attributes = {
-					["damage bonus"] = 1.25,
 					["faster reload rate"] = 0.8,
 					["clip size upgrade atomic"] = 2.0,
 				},
 			},
 			[3] = {
-				Display = "Soldier MK. III",
-				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
+				Display = "Black Box Soldier",
 				Scale = 1.25,
 
 				Items = {"The Black Box", "The Grenadier's Softcap"},
+
+				MaxHealth = 300,
 
 				Attributes = {
 					["damage bonus"] = 1.5,
@@ -39,18 +42,19 @@ local BOTS_VARIANTS = {
 			[4] = {
 				Display = "Sergeant Crits",
 				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
-				Scale = 1.9,
+				Scale = 1.7,
 
 				Conds = {37},
+				MaxHealth = 350,
 
 				Items = {"Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Tyrant's Helm"},
 
 				Attributes = {
-					["damage bonus"] = 1.5,
-					["faster reload rate"] = -0.6,
-					["fire rate bonus"] = 0.2,
-					["clip size upgrade atomic"] = 30.0,
-					["Projectile speed increased"] = 0.7,
+					["damage bonus"] = 2,
+					-- ["faster reload rate"] = -0.6,
+					["fire rate bonus"] = 0.4,
+					["clip size upgrade atomic"] = 20.0,
+					["Projectile speed increased"] = 0.5,
 					["move speed bonus"] = 0.5,
 
 					["damage force reduction"] = 0.4,
@@ -248,7 +252,7 @@ local function applyName(bot, name, owner)
 	bot:SetFakeClientConVar("name", displayName)
 end
 
-local function applyTierData(bot, data)
+local function applyUniversalData(bot, data)
 	if data.Model then
 		bot:SetCustomModelWithClassAnimations(data.Model)
 	end
@@ -258,11 +262,6 @@ local function applyTierData(bot, data)
 		bot:RunScriptCode(vscript, bot)
 	end
 
-	if data.Conds then
-		for _, id in pairs(data.Conds) do
-			bot:AddCond(id)
-		end
-	end
 
 	if data.Items then
 		for _, itemName in pairs(data.Items) do
@@ -276,8 +275,37 @@ local function applyTierData(bot, data)
 		end
 	end
 
+	if data.MaxHealth then
+		local vscript = ("activator.SetMaxHealth(%s)"):format(tostring(data.MaxHealth))
+		bot:RunScriptCode(vscript, bot)
+	end
+
 	if data.Display then
 		applyName(bot, data.Display, activeBuiltBotsOwner[bot:GetHandleIndex()])
+	end
+end
+
+local function applyDefaultData(bot, class)
+	local data = BOTS_VARIANTS[class]
+
+	if data.DefaultAttributes then
+		for name, value in pairs(data.DefaultAttributes) do
+			bot:SetAttributeValue(name, value)
+		end
+	end
+
+	bot:SwitchClassInPlace(data.Class)
+
+	applyUniversalData(bot, data)
+end
+
+local function applyTierData(bot, data)
+	applyUniversalData(bot, data)
+
+	if data.Conds then
+		for _, id in pairs(data.Conds) do
+			bot:AddCond(id)
+		end
 	end
 end
 
@@ -454,6 +482,8 @@ end
 function TierPurchase(tier, activator)
 	tier = tier + 1
 
+	print("purchasing tier", tier)
+
 	activator.BotTier = tier
 
 	local botHandle = activator.BuiltBotHandle
@@ -517,15 +547,16 @@ function SentrySpawned(_, building)
 	timer.Simple(0, function()
 		botSpawn:SetAbsOrigin(origin)
 		botSpawn:SwitchClassInPlace("Soldier")
-		botSpawn:SetCustomModelWithClassAnimations("models/bots/soldier/bot_soldier.mdl")
+		-- botSpawn:SetCustomModelWithClassAnimations("models/bots/soldier/bot_soldier.mdl")
 
 		-- for testing
 		-- applyBotTier(botSpawn, "soldier", 2)
 
 		if owner.BotTier and owner.BotTier > 1 then
+			print("applying tier", owner.BotTier)
 			applyBotTier(botSpawn, "soldier", owner.BotTier)
 		else
-			
+			applyDefaultData(botSpawn, "soldier")
 		end
 
 		-- bot.m_nBotSkill = 4 -- expert
