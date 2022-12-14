@@ -48,9 +48,10 @@ local BOTS_WRANGLED_ATTRIBUTES = {
 }
 
 -- we can't expect lua to do all the work - joshua graham
-local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(0.1)"
--- local BOT_DISABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(0.1)"
--- local BOT_ENABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(100000)"
+-- local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(0.1)"
+local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000"
+local BOT_DISABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(0.1)"
+local BOT_ENABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(100000)"
 -- local BOT_CLEAR_FOCUS = "activator.ClearAttentionFocus()"
 
 local BOT_ATTACK_VSCRIPT = "activator.PressFireButton(0.1)"
@@ -219,7 +220,7 @@ local function applyTierData(bot, data)
 		local vscript = ("activator.SetScaleOverride(%s)"):format(tostring(data.Scale))
 		bot:RunScriptCode(vscript, bot)
 	end
-	
+
 	if data.Conds then
 		for _, id in pairs(data.Conds) do
 			bot:AddCond(id)
@@ -416,7 +417,7 @@ function SentrySpawned(_, building)
 		botSpawn:SetCustomModelWithClassAnimations("models/bots/soldier/bot_soldier.mdl")
 
 		-- for testing
-		applyBotTier(botSpawn, "soldier", 2)
+		-- applyBotTier(botSpawn, "soldier", 2)
 
 		-- bot.m_nBotSkill = 4 -- expert
 		botSpawn:RunScriptCode(BOT_SETUP_VSCRIPT, botSpawn, botSpawn)
@@ -456,13 +457,13 @@ function SentrySpawned(_, building)
 			end
 		end)
 
-		local aimPointerName = "BotAimPointer" .. tostring(handle)
-		local aimPointer = Entity("info_particle_system", true)
-		aimPointer:SetName(aimPointerName)
+		-- local aimPointerName = "BotAimPointer" .. tostring(handle)
+		-- local aimPointer = Entity("info_particle_system", true)
+		-- aimPointer:SetName(aimPointerName)
 
-		local killPointerName = "BotKillPointer" .. tostring(handle)
-		local killPointer = Entity("info_particle_system", true)
-		killPointer:SetName(killPointerName)
+		-- local killPointerName = "BotKillPointer" .. tostring(handle)
+		-- local killPointer = Entity("info_particle_system", true)
+		-- killPointer:SetName(killPointerName)
 
 		local cursorPos = Vector(0, 0, 0)
 
@@ -507,12 +508,12 @@ function SentrySpawned(_, building)
 		logicLoop = timer.Create(0.2, function()
 			if not activeBuiltBots[handle] then
 				timer.Stop(logicLoop)
-				if IsValid(aimPointer) then
-					aimPointer:Remove()
-				end
-				if IsValid(killPointer) then
-					killPointer:Remove()
-				end
+				-- if IsValid(aimPointer) then
+				-- 	aimPointer:Remove()
+				-- end
+				-- if IsValid(killPointer) then
+				-- 	killPointer:Remove()
+				-- end
 				return
 			end
 
@@ -528,7 +529,7 @@ function SentrySpawned(_, building)
 				if not lastWrangled then
 					botSpawn:BotCommand("stop interrupt action")
 
-					-- botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
+					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
 					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
 
 					for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
@@ -542,14 +543,13 @@ function SentrySpawned(_, building)
 				local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
 
 				cursorPos = getCursorPos(owner)
-				aimPointer:SetAbsOrigin(cursorPos)
 
 				if attackHeld then
 					botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
 				end
 
-				local stringStart = ("interrupt_action -lookposent %s -waituntildone -alwayslook"):format(
-					aimPointerName
+				local stringStart = ("interrupt_action -lookpos %s %s %s -alwayslook"):format(
+					cursorPos[1], cursorPos[2], cursorPos[3]
 				)
 
 				if altFireHeld then
@@ -570,26 +570,27 @@ function SentrySpawned(_, building)
 
 				botSpawn:BotCommand("stop interrupt action")
 
-				-- botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
+				botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
 				botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
 
 				lastWrangled = false
 			end
 
-			local lookTarget = getBotTarget(botSpawn, owner)
-			local lookTargetPos = lookTarget:GetAbsOrigin()
+			-- local lookTarget = getBotTarget(botSpawn, owner)
+			-- local lookTargetPos = lookTarget:GetAbsOrigin()
 
-			killPointer:SetAbsOrigin(lookTargetPos)
+			-- killPointer:SetAbsOrigin(lookTargetPos)
 
 			local pos = owner:GetAbsOrigin()
 
-			local stringStart = ("interrupt_action -lookposent %s -waituntildone"):format(killPointerName)
+			-- local stringStart = ("interrupt_action -lookposent %s -waituntildone"):format(killPointerName)
+			local stringStart = "interrupt_action"
 
 			-- force attack target if not facing owner
-			if lookTarget ~= owner then
+			-- if lookTarget ~= owner then
 				-- botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
-				stringStart = stringStart .. " -killlook"
-			end
+			-- 	stringStart = stringStart .. " -killlook"
+			-- end
 
 			-- don't move if already close
 			if pos:Distance(botSpawn:GetAbsOrigin()) <= 150 then
