@@ -84,6 +84,13 @@ local BOTS_WRANGLED_ATTRIBUTES = {
 	["SET BONUS: move speed set bonus"] = 1.3,
 }
 
+-- if owner has these conds, apply them on the bot
+-- used to replicate canteen effects
+local REPLICATE_CONDS = {
+	TF_COND_CRITBOOSTED_USER_BUFF,
+	TF_COND_INVULNERABLE_USER_BUFF
+}
+
 -- we can't expect lua to do all the work - joshua graham
 -- local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(0.1)"
 local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000"
@@ -470,6 +477,12 @@ function SentrySpawned(_, building)
 
 			if not owner:IsAlive() then
 				return
+			end
+
+			for _, cond in pairs(REPLICATE_CONDS) do
+				if owner:InCond(cond) ~= 0 then
+					botSpawn:AddCond(cond, 0.25, owner)
+				end
 			end
 
 			if owner.m_hActiveWeapon.m_iClassname == "tf_weapon_laser_pointer" then
