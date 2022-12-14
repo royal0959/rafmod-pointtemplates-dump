@@ -120,26 +120,6 @@ function OnWaveStart()
 		bot:SetAttributeValue("ignored by bots", nil)
 		bot:SetAttributeValue("damage bonus HIDDEN", nil)
 	end
-
-	-- local objResource = ents.FindByClass("tf_objective_resource")
-
-	-- objResource.m_nMannVsMachineWaveEnemyCount = 1000
-
-	-- for i = 1, #objResource.m_nMannVsMachineWaveClassFlags  do
-	-- 	objResource:AcceptInput("$setprop$m_nMannVsMachineWaveClassFlags$" .. i - 1, 9)
-	-- end
-	-- for i = 1, #objResource.m_iszMannVsMachineWaveClassNames do
-	-- 	objResource:AcceptInput("$setprop$m_iszMannVsMachineWaveClassNames$" .. i - 1, "soldier_barrage")
-	-- end
-	-- for i = 1, #objResource.m_nMannVsMachineWaveClassCounts do
-	-- 	objResource:AcceptInput("$setprop$m_nMannVsMachineWaveClassCounts$" .. i - 1, 1)
-	-- end
-	-- for i = 1, #objResource.m_bMannVsMachineWaveClassActive do
-	-- 	objResource:AcceptInput("$setprop$m_bMannVsMachineWaveClassActive$" .. i - 1, true)
-	-- end
-	-- for i = 1, #objResource.m_bMannVsMachineWaveClassActive2 do
-	-- 	objResource:AcceptInput("$setprop$m_bMannVsMachineWaveClassActive2$" .. i - 1, true)
-	-- end
 end
 
 -- convert damage dealt by bots to owner
@@ -173,10 +153,6 @@ function OnPlayerConnected(player)
 	addGlobalDamageCallback(player)
 end
 
--- for _, player in pairs(ents.GetAllPlayers()) do
--- 	addGlobalDamageCallback(player)
--- end
-
 local function removeCallbacks(player, callbacks)
 	if not IsValid(player) then
 		return
@@ -190,39 +166,6 @@ end
 local function getEyeAngles(player)
 	local pitch = player["m_angEyeAngles[0]"]
 	local yaw = player["m_angEyeAngles[1]"]
-
-	return Vector(pitch, yaw, 0)
-end
-
-local atan = math.atan
-local sqrt = math.sqrt
-local pi = math.pi
-
--- ported from C:\Users\Admin\Documents\GitHub\sigsegv-mvm\src\sdk2013\mathlib_base.cpp
-local function vectorAngles(forward)
-	local yaw, pitch
-
-	if forward[2] == 0 and forward[1] == 0 then
-		yaw = 0
-		if forward[3] > 0 then
-			pitch = 270
-		else
-			pitch = 90
-		end
-	else
-		yaw = (atan(forward[2], forward[1]) * 180 / pi)
-		-- if yaw < 0 then
-		-- 	yaw = yaw + 360
-		-- end
-
-		local tmp = sqrt(forward[1] * forward[1] + forward[2] * forward[2])
-		tmp = forward[3] > 0 and tmp or -tmp
-
-		pitch = (atan(-forward[3], tmp) * 180 / pi)
-		-- if pitch < 0 then
-		-- 	pitch = pitch + 360
-		-- end
-	end
 
 	return Vector(pitch, yaw, 0)
 end
@@ -354,10 +297,6 @@ local function setupBot(bot, owner, handle, building)
 
 	local botHandle = bot:GetHandleIndex()
 
-	-- local displayName = "Soldier (" .. owner.m_szNetname .. ")"
-	-- bot.m_szNetname = displayName
-
-	-- bot:SetFakeClientConVar("name", displayName)
 	applyName(bot, "Soldier", owner)
 
 	bot.m_iTeamNum = owner.m_iTeamNum
@@ -367,10 +306,6 @@ local function setupBot(bot, owner, handle, building)
 	for name, value in pairs(BOTS_ATTRIBUTES) do
 		bot:SetAttributeValue(name, value)
 	end
-
-	-- bot:AddModule("rotator")
-	-- bot["$lookat"] = "center"
-	-- bot["$projectilespeed"] = 1100
 
 	owner.BuiltBotHandle = tostring(botHandle)
 	owner.BuiltBotSentry = tostring(building:GetHandleIndex())
@@ -393,8 +328,6 @@ local function setupBot(bot, owner, handle, building)
 		activeBuiltBots[handle] = nil
 		activeBuiltBotsOwner[botHandle] = nil
 		bot.m_iTeamNum = 1
-
-		-- bot:RemoveModule("rotator")
 
 		removeCallbacks(bot, callbacks)
 		if IsValid(building) then
@@ -423,71 +356,6 @@ local function findFreeBot()
 	return chosen
 end
 
-local function traceBetween(player, originTarget)
-	local DefaultTraceInfo = {
-		start = player,
-		endpos = originTarget,
-		mask = MASK_SOLID,
-		collisiongroup = COLLISION_GROUP_DEBRIS,
-	}
-	local trace = util.Trace(DefaultTraceInfo)
-
-	return trace.Hit
-end
-
--- finds closest bot to use as target, TODO: prioritize medics and spies
-local function getBotTarget(bot, owner)
-	local botTeam = bot.m_iTeamNum
-
-	-- don't target anything in pre wave
-	if botTeam == 1 then
-		return owner
-	end
-
-	local closest = { nil, 1000000 }
-
-	local players = ents.GetAllPlayers()
-
-	local botOrigin = bot:GetAbsOrigin()
-
-	local origin
-	local distance
-
-	local function validateTarget(player)
-		if not player:IsAlive() then
-			return
-		end
-
-		if player.m_iTeamNum == botTeam then
-			return
-		end
-
-		origin = player:GetAbsOrigin()
-		distance = origin:Distance(botOrigin)
-
-		if distance > closest[2] then
-			return
-		end
-
-		if traceBetween(bot, origin) then
-			return
-		end
-
-		closest = { player, distance }
-	end
-
-	for _, player in pairs(players) do
-		validateTarget(player)
-	end
-
-	if not closest[1] then
-		-- if no target was found, have the bot look at its owner
-		return owner
-	end
-
-	return closest[1]
-end
-
 function TierPurchase(tier, activator)
 	tier = tier + 1
 
@@ -505,14 +373,6 @@ function TierPurchase(tier, activator)
 
 		return
 	end
-
-	-- local botHandle = activator.BuiltBotHandle
-	-- if not botHandle then
-	-- 	return
-	-- end
-
-	-- botHandle = tonumber(botHandle)
-	-- local bot = Entity(botHandle)
 
 	if not bot then
 		return
@@ -580,14 +440,6 @@ function SentrySpawned(_, building)
 			botSpawn:Suicide()
 		end)
 
-		-- timer.Simple(1, function ()
-		-- 	local displayName = "Soldier (" .. owner.m_szNetname .. ")"
-		-- 	botSpawn.m_szNetname = displayName
-
-		-- 	botSpawn:RunScriptFile("rename_to_netname.nut", botSpawn, botSpawn)
-		-- 	-- botSpawn:CallScriptFunction("forceNameToNetName", botSpawn, botSpawn)
-		-- end)
-
 		if not inWave then
 			botSpawn.m_iTeamNum = 1
 			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
@@ -603,48 +455,7 @@ function SentrySpawned(_, building)
 			end
 		end)
 
-		-- local aimPointerName = "BotAimPointer" .. tostring(handle)
-		-- local aimPointer = Entity("info_particle_system", true)
-		-- aimPointer:SetName(aimPointerName)
-
-		-- local killPointerName = "BotKillPointer" .. tostring(handle)
-		-- local killPointer = Entity("info_particle_system", true)
-		-- killPointer:SetName(killPointerName)
-
 		local cursorPos = Vector(0, 0, 0)
-
-		-- local function forceLookAtCursor()
-		-- 	local delta = cursorPos - botSpawn:GetAbsOrigin()
-		-- 	local angles = vectorAngles(delta)
-
-		-- 	botSpawn:SetAbsAngles(angles)
-		-- 	botSpawn:SnapEyeAngles(angles)
-		-- end
-
-		-- local forceAngleLoop
-		-- forceAngleLoop = timer.Create(0, function()
-		-- 	if not activeBuiltBots[handle] then
-		-- 		timer.Stop(forceAngleLoop)
-		-- 		return
-		-- 	end
-
-		-- 	if not owner:IsAlive() then
-		-- 		return
-		-- 	end
-
-		-- 	if owner.m_hActiveWeapon.m_iClassname ~= "tf_weapon_laser_pointer" then
-		-- 		return
-		-- 	end
-
-		-- 	-- botSpawn:FaceEntity(aimPointer)
-		-- 	-- botSpawn:SnapEyeAngles(getEyeAngles(owner))
-
-		-- 	local delta = cursorPos - botSpawn:GetAbsOrigin()
-		-- 	local angles = vectorAngles(delta)
-
-		-- 	botSpawn:SetAbsAngles(angles)
-		-- 	botSpawn:SnapEyeAngles(angles)
-		-- end, 0)
 
 		local lastWrangled = false
 
@@ -654,12 +465,6 @@ function SentrySpawned(_, building)
 		logicLoop = timer.Create(0.2, function()
 			if not activeBuiltBots[handle] then
 				timer.Stop(logicLoop)
-				-- if IsValid(aimPointer) then
-				-- 	aimPointer:Remove()
-				-- end
-				-- if IsValid(killPointer) then
-				-- 	killPointer:Remove()
-				-- end
 				return
 			end
 
@@ -722,21 +527,10 @@ function SentrySpawned(_, building)
 				lastWrangled = false
 			end
 
-			-- local lookTarget = getBotTarget(botSpawn, owner)
-			-- local lookTargetPos = lookTarget:GetAbsOrigin()
-
-			-- killPointer:SetAbsOrigin(lookTargetPos)
 
 			local pos = owner:GetAbsOrigin()
 
-			-- local stringStart = ("interrupt_action -lookposent %s -waituntildone"):format(killPointerName)
 			local stringStart = "interrupt_action"
-
-			-- force attack target if not facing owner
-			-- if lookTarget ~= owner then
-				-- botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
-			-- 	stringStart = stringStart .. " -killlook"
-			-- end
 
 			-- don't move if already close
 			if pos:Distance(botSpawn:GetAbsOrigin()) <= 150 then
@@ -749,18 +543,4 @@ function SentrySpawned(_, building)
 			botSpawn:BotCommand(interruptAction)
 		end, 0)
 	end)
-
-	-- table.insert(activeBuiltBots, botSpawn)
 end
-
--- timer.Simple(5, function ()
--- 	for _, player in pairs(ents.GetAllPlayers()) do
--- 		if player:IsRealPlayer() then
--- 			goto continue
--- 		end
-
--- 		setupBot(player)
-
--- 		::continue::
--- 	end
--- end)

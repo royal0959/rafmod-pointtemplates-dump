@@ -49,10 +49,6 @@ WaveSchedule
 			{
 				Output "popscript,$TierPurchase,,0"
 			}
-			OnRestore
-			{
-				Output "!activator,$displaytextchat,,0"
-			}
 		}
 	}
 
