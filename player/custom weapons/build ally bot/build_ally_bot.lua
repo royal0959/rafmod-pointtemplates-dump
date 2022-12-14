@@ -298,9 +298,10 @@ local function applyTierData(bot, data)
 	if data.HealthIncrease then
 		bot:SetAttributeValue("hidden maxhealth non buffed", data.HealthIncrease)
 
-		-- a mouthful innit
-		local sentry = Entity(tonumber(activeBuiltBotsOwner[bot:GetHandleIndex()].BuiltBotSentry))
-		sentry.m_iMaxHealth = sentry.BaseMaxHealth + data.HealthIncrease
+		local owner = activeBuiltBotsOwner[bot:GetHandleIndex()]
+
+		local sentry = Entity(tonumber(owner.BuiltBotSentry))
+		sentry.m_iMaxHealth = owner.m_iMaxHealth + data.HealthIncrease
 		sentry.m_iHealth = sentry.m_iHealth + data.HealthIncrease
 	end
 
@@ -334,6 +335,10 @@ local function removePreviousTier(bot, class, previousTier)
 	end
 end
 
+local function getCurBotTier(owner)
+	return owner:GetPlayerItemBySlot(2):GetAttributeValue("throwable fire speed")
+end
+
 local function applyBotTier(bot, class, tier)
 	if tier > 2 then
 		removePreviousTier(bot, class, tier - 1)
@@ -341,7 +346,6 @@ local function applyBotTier(bot, class, tier)
 
 	local tierData = BOTS_VARIANTS[class].Tiers[tier]
 
-	print(tier)
 	applyTierData(bot, tierData)
 end
 
@@ -489,7 +493,7 @@ function TierPurchase(tier, activator)
 
 	print("purchasing tier", tier)
 
-	activator.BotTier = tier
+	-- activator.BotTier = tier
 
 	local botHandle = activator.BuiltBotHandle
 	local bot = botHandle and Entity(tonumber(botHandle))
@@ -552,23 +556,19 @@ function SentrySpawned(_, building)
 	timer.Simple(0, function()
 		botSpawn:SetAbsOrigin(origin)
 		botSpawn:SwitchClassInPlace("Soldier")
-		-- botSpawn:SetCustomModelWithClassAnimations("models/bots/soldier/bot_soldier.mdl")
 
-		-- for testing
-		-- applyBotTier(botSpawn, "soldier", 2)
+		local botTier = getCurBotTier(owner)
 
-		if owner.BotTier and owner.BotTier > 1 then
-			print("applying tier", owner.BotTier)
-			applyBotTier(botSpawn, "soldier", owner.BotTier)
+		if botTier and botTier > 1 then
+			print("applying tier", botTier)
+			applyBotTier(botSpawn, "soldier", botTier)
 		else
 			applyDefaultData(botSpawn, "soldier")
 		end
 
-		-- bot.m_nBotSkill = 4 -- expert
 		botSpawn:RunScriptCode(BOT_SETUP_VSCRIPT, botSpawn, botSpawn)
 
 		-- set max health
-		newBuilding.BaseMaxHealth = botSpawn.m_iHealth
 		newBuilding.m_iMaxHealth = botSpawn.m_iHealth
 		newBuilding.m_iHealth = botSpawn.m_iHealth
 
