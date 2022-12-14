@@ -8,14 +8,10 @@ local BOTS_VARIANTS = {
 
 		DefaultAttributes = {},
 
-		MaxHealth = 200,
-
 		Tiers = {
 			[2] = {
 				Display = "Direct Hit Soldier",
 				Scale = 1.1,
-
-				MaxHealth = 250,
 
 				Items = {"The Direct Hit", "Stainless Pot"},
 
@@ -30,7 +26,7 @@ local BOTS_VARIANTS = {
 
 				Items = {"The Black Box", "The Grenadier's Softcap"},
 
-				MaxHealth = 300,
+				HealthIncrease = 150,
 
 				Attributes = {
 					["damage bonus"] = 1.5,
@@ -45,7 +41,7 @@ local BOTS_VARIANTS = {
 				Scale = 1.7,
 
 				Conds = {37},
-				MaxHealth = 350,
+				HealthIncrease = 3800,
 
 				Items = {"Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Tyrant's Helm"},
 
@@ -275,11 +271,6 @@ local function applyUniversalData(bot, data)
 		end
 	end
 
-	if data.MaxHealth then
-		local vscript = ("activator.SetMaxHealth(%s)"):format(tostring(data.MaxHealth))
-		bot:RunScriptCode(vscript, bot)
-	end
-
 	if data.Display then
 		applyName(bot, data.Display, activeBuiltBotsOwner[bot:GetHandleIndex()])
 	end
@@ -295,12 +286,23 @@ local function applyDefaultData(bot, class)
 	end
 
 	bot:SwitchClassInPlace(data.Class)
+	-- remove potential lingering health
+	bot:SetAttributeValue("hidden maxhealth non buffed", nil)
 
 	applyUniversalData(bot, data)
 end
 
 local function applyTierData(bot, data)
 	applyUniversalData(bot, data)
+
+	if data.HealthIncrease then
+		bot:SetAttributeValue("hidden maxhealth non buffed", data.HealthIncrease)
+
+		-- a mouthful innit
+		local sentry = Entity(tonumber(activeBuiltBotsOwner[bot:GetHandleIndex()].BuiltBotSentry))
+		sentry.m_iMaxHealth = sentry.BaseMaxHealth + data.HealthIncrease
+		sentry.m_iHealth = sentry.m_iHealth + data.HealthIncrease
+	end
 
 	if data.Conds then
 		for _, id in pairs(data.Conds) do
@@ -333,7 +335,6 @@ local function removePreviousTier(bot, class, previousTier)
 end
 
 local function applyBotTier(bot, class, tier)
-	-- TODO: remove previous tier's stuff like items conds and attributes
 	if tier > 2 then
 		removePreviousTier(bot, class, tier - 1)
 	end
@@ -368,6 +369,8 @@ local function setupBot(bot, owner, handle, building)
 	-- bot["$projectilespeed"] = 1100
 
 	owner.BuiltBotHandle = tostring(botHandle)
+	owner.BuiltBotSentry = tostring(building:GetHandleIndex())
+
 	activeBuiltBots[handle] = bot
 	activeBuiltBotsOwner[botHandle] = owner
 
@@ -381,6 +384,8 @@ local function setupBot(bot, owner, handle, building)
 		end
 
 		owner.BuiltBotHandle = false
+		owner.BuiltBotSentry = false
+
 		activeBuiltBots[handle] = nil
 		activeBuiltBotsOwner[botHandle] = nil
 		bot.m_iTeamNum = 1
@@ -563,6 +568,7 @@ function SentrySpawned(_, building)
 		botSpawn:RunScriptCode(BOT_SETUP_VSCRIPT, botSpawn, botSpawn)
 
 		-- set max health
+		newBuilding.BaseMaxHealth = botSpawn.m_iHealth
 		newBuilding.m_iMaxHealth = botSpawn.m_iHealth
 		newBuilding.m_iHealth = botSpawn.m_iHealth
 
