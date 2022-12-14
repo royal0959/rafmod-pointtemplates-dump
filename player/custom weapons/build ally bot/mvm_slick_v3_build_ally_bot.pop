@@ -33,7 +33,7 @@ WaveSchedule
 		{
 			Name "Companion Hardware Upgrade"
 			Attribute "throwable fire speed"
-			Cap 4
+			Cap 5
 			Increment 1
 			Cost 300
 			Description "Upgrades bot type"

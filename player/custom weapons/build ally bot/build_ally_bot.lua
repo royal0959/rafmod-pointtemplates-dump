@@ -17,25 +17,69 @@ local BOTS_VARIANTS = {
 
 				Attributes = {
 					["faster reload rate"] = 0.8,
-					["clip size upgrade atomic"] = 2.0,
+					["rocket specialist"] = 1,
+					-- ["clip size upgrade atomic"] = 2.0,
 				},
 			},
 			[3] = {
-				Display = "Black Box Soldier",
+				Display = "Burst Fire Soldier",
 				Scale = 1.25,
 
-				Items = {"The Black Box", "The Grenadier's Softcap"},
+				Items = {"Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Armored Authority"},
 
 				HealthIncrease = 150,
 
 				Attributes = {
-					["damage bonus"] = 1.5,
-					["faster reload rate"] = 0.8,
-					["clip size upgrade atomic"] = 4.0,
-					["fire rate bonus"] = 0.85,
+					["damage bonus"] = 1.1,
+
+					-- ["reload full clip at once"] = 1,
+					["force fire full clip"] = 1,
+
+					["faster reload rate"] = 0.6,
+					["fire rate bonus"] = 0.1,
+					["clip size upgrade atomic"] = 6.0,
+					["Projectile speed increased"] = 0.65
 				},
 			},
 			[4] = {
+				Display = "Rapid Fire Soldier",
+				Scale = 1.55,
+
+				Items = {"Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Soldier Drill Hat"},
+
+				HealthIncrease = 200,
+
+				Attributes = {
+					-- ["damage bonus"] = 1.25,
+
+					["faster reload rate"] = -0.8,
+					["fire rate bonus"] = 0.5,
+				},
+			},
+			[5] = {
+				Display = "Giant Charged Soldier",
+				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
+				Scale = 1.75,
+
+				Items = {"The Original", "The Nuke"},
+
+				Conds = {37},
+				HealthIncrease = 1800,
+
+				Attributes = {
+					["damage bonus"] = 1.5,
+					["faster reload rate"] = 0.5,
+					["fire rate bonus"] = 2,
+					["Projectile speed increased"] = 0.5,
+
+					["move speed bonus"] = 0.5,
+
+					["damage force reduction"] = 0.4,
+					["airblast vulnerability multiplier"] = 0.4,
+					["override footstep sound set"] = 3,
+				},
+			},
+			[6] = {
 				Display = "Sergeant Crits",
 				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
 				Scale = 1.7,
