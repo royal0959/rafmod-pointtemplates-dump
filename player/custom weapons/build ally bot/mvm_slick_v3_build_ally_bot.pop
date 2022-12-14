@@ -27,6 +27,31 @@ WaveSchedule
 		}
 	}
 
+	ExtendedUpgrades 
+	{
+		companion_scout
+		{
+			Name "Companion Hardware Upgrade"
+			Attribute "throwable fire speed"
+			Cap 4
+			Increment 1
+			Cost 300
+			Description "Upgrades bot type"
+			AllowedWeapons
+			{
+				ItemName "Portable Robotic Companion" 
+			}
+			OnApply
+			{
+				Output "popscript,$TierPurchase,,0"
+			}
+			OnDowngrade
+			{
+				Output "popscript,$TierPurchase,,0"
+			}
+		}
+	}
+
 	PointTemplates 
 	{
 		OnSentryBuild
@@ -42,6 +67,7 @@ WaveSchedule
 
 	BuildingSpawnTemplate
 	{
+		ItemName "Portable Robotic Companion" 
 		Name OnSentryBuild
 		BuildingType "Sentry" 
 		Delay 0.1

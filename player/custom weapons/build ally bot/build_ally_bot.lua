@@ -10,13 +10,40 @@ local BOTS_VARIANTS = {
 
 		Tiers = {
 			[2] = {
+				Display = "Soldier MK. II",
+				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
+				Scale = 1.1,
+
+				Items = {"Stainless Pot"},
+
+				Attributes = {
+					["damage bonus"] = 1.25,
+					["faster reload rate"] = 0.8,
+					["clip size upgrade atomic"] = 2.0,
+				},
+			},
+			[3] = {
+				Display = "Soldier MK. III",
+				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
+				Scale = 1.25,
+
+				Items = {"The Black Box", "The Grenadier's Softcap"},
+
+				Attributes = {
+					["damage bonus"] = 1.5,
+					["faster reload rate"] = 0.8,
+					["clip size upgrade atomic"] = 4.0,
+					["fire rate bonus"] = 0.85,
+				},
+			},
+			[4] = {
 				Display = "Sergeant Crits",
 				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
 				Scale = 1.9,
 
 				Conds = {37},
 
-				Items = {"Tyrant's Helm"},
+				Items = {"Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Tyrant's Helm"},
 
 				Attributes = {
 					["damage bonus"] = 1.5,
@@ -33,6 +60,16 @@ local BOTS_VARIANTS = {
 			},
 		},
 	},
+
+	heavy = {
+		Display = "Heavyweapons",
+		CLass = "Heavy",
+		Model = "models/bots/heavy/bot_heavy.mdl",
+
+		DefaultAttributes = {},
+
+		Tiers = {},
+	}
 }
 
 local BOTS_ATTRIBUTES = {
@@ -81,7 +118,7 @@ function OnWaveStart()
 		bot:RemoveCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 		bot:SetAttributeValue("ignored by enemy sentries", nil)
 		bot:SetAttributeValue("ignored by bots", nil)
-		bot:SetAttributeValue("dmg penalty vs players", nil)
+		bot:SetAttributeValue("damage bonus HIDDEN", nil)
 	end
 
 	-- local objResource = ents.FindByClass("tf_objective_resource")
@@ -244,10 +281,38 @@ local function applyTierData(bot, data)
 	end
 end
 
+-- remove lingering stuff
+local function removePreviousTier(bot, class, previousTier)
+	local data = BOTS_VARIANTS[class].Tiers[previousTier]
+
+	if data.Conds then
+		for _, id in pairs(data.Conds) do
+			bot:RemoveCond(id)
+		end
+	end
+
+	if data.Items then
+		for _, itemName in pairs(data.Items) do
+			bot:RemoveItem(itemName)
+		end
+	end
+
+	if data.Attributes then
+		for name, _ in pairs(data.Attributes) do
+			bot:SetAttributeValue(name, nil)
+		end
+	end
+end
+
 local function applyBotTier(bot, class, tier)
 	-- TODO: remove previous tier's stuff like items conds and attributes
+	if tier > 2 then
+		removePreviousTier(bot, class, tier - 1)
+	end
+
 	local tierData = BOTS_VARIANTS[class].Tiers[tier]
 
+	print(tier)
 	applyTierData(bot, tierData)
 end
 
@@ -274,6 +339,7 @@ local function setupBot(bot, owner, handle, building)
 	-- bot["$lookat"] = "center"
 	-- bot["$projectilespeed"] = 1100
 
+	owner.BuiltBotHandle = tostring(botHandle)
 	activeBuiltBots[handle] = bot
 	activeBuiltBotsOwner[botHandle] = owner
 
@@ -281,6 +347,12 @@ local function setupBot(bot, owner, handle, building)
 		building.m_iHealth = bot.m_iHealth
 	end)
 	callbacks.died = bot:AddCallback(ON_DEATH, function()
+		-- attributes applied to bot spawned through script are not cleared automatically on death
+		for name, _ in pairs(bot:GetAllAttributeValues()) do
+			bot:SetAttributeValue(name, nil)
+		end
+
+		owner.BuiltBotHandle = false
 		activeBuiltBots[handle] = nil
 		activeBuiltBotsOwner[botHandle] = nil
 		bot.m_iTeamNum = 1
@@ -379,6 +451,37 @@ local function getBotTarget(bot, owner)
 	return closest[1]
 end
 
+function TierPurchase(tier, activator)
+	tier = tier + 1
+
+	activator.BotTier = tier
+
+	local botHandle = activator.BuiltBotHandle
+	local bot = botHandle and Entity(tonumber(botHandle))
+
+	if tier <= 1 then
+		if bot then
+			bot:Suicide()
+		end
+
+		return
+	end
+
+	-- local botHandle = activator.BuiltBotHandle
+	-- if not botHandle then
+	-- 	return
+	-- end
+
+	-- botHandle = tonumber(botHandle)
+	-- local bot = Entity(botHandle)
+
+	if not bot then
+		return
+	end
+
+	applyBotTier(bot, "soldier", tier)
+end
+
 function SentrySpawned(_, building)
 	local owner = building.m_hBuilder
 	local handle = owner:GetHandleIndex()
@@ -419,6 +522,12 @@ function SentrySpawned(_, building)
 		-- for testing
 		-- applyBotTier(botSpawn, "soldier", 2)
 
+		if owner.BotTier and owner.BotTier > 1 then
+			applyBotTier(botSpawn, "soldier", owner.BotTier)
+		else
+			
+		end
+
 		-- bot.m_nBotSkill = 4 -- expert
 		botSpawn:RunScriptCode(BOT_SETUP_VSCRIPT, botSpawn, botSpawn)
 
@@ -447,7 +556,7 @@ function SentrySpawned(_, building)
 			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 			botSpawn:SetAttributeValue("ignored by enemy sentries", 1)
 			botSpawn:SetAttributeValue("ignored by bots", 1)
-			botSpawn:SetAttributeValue("dmg penalty vs players", 0.0001)
+			botSpawn:SetAttributeValue("damage bonus HIDDEN", 0.0001)
 		end
 
 		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
