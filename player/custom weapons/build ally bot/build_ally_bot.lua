@@ -13,7 +13,7 @@ local BOTS_VARIANTS = {
 				Display = "Direct Hit Soldier",
 				Scale = 1.1,
 
-				Items = {"The Direct Hit", "Stainless Pot"},
+				Items = { "The Direct Hit", "Stainless Pot" },
 
 				Attributes = {
 					["faster reload rate"] = 0.8,
@@ -25,7 +25,7 @@ local BOTS_VARIANTS = {
 				Display = "Burst Fire Soldier",
 				Scale = 1.25,
 
-				Items = {"Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Armored Authority"},
+				Items = { "Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Armored Authority" },
 
 				HealthIncrease = 150,
 
@@ -38,14 +38,14 @@ local BOTS_VARIANTS = {
 					["faster reload rate"] = 0.6,
 					["fire rate bonus"] = 0.1,
 					["clip size upgrade atomic"] = 6.0,
-					["Projectile speed increased"] = 0.65
+					["Projectile speed increased"] = 0.65,
 				},
 			},
 			[4] = {
 				Display = "Rapid Fire Soldier",
 				Scale = 1.55,
 
-				Items = {"Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Soldier Drill Hat"},
+				Items = { "Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Soldier Drill Hat" },
 
 				HealthIncrease = 200,
 
@@ -61,9 +61,9 @@ local BOTS_VARIANTS = {
 				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
 				Scale = 1.75,
 
-				Items = {"The Original", "The Nuke"},
+				Items = { "The Original", "The Nuke" },
 
-				Conds = {37},
+				Conds = { 37 },
 				HealthIncrease = 1800,
 
 				Attributes = {
@@ -84,10 +84,10 @@ local BOTS_VARIANTS = {
 				Model = "models/bots/soldier_boss/bot_soldier_boss.mdl",
 				Scale = 1.7,
 
-				Conds = {37},
+				Conds = { 37 },
 				HealthIncrease = 3800,
 
-				Items = {"Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Tyrant's Helm"},
+				Items = { "Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Tyrant's Helm" },
 
 				Attributes = {
 					["damage bonus"] = 2,
@@ -113,7 +113,7 @@ local BOTS_VARIANTS = {
 		DefaultAttributes = {},
 
 		Tiers = {},
-	}
+	},
 }
 
 local BOTS_ATTRIBUTES = {
@@ -132,7 +132,7 @@ local BOTS_WRANGLED_ATTRIBUTES = {
 -- used to replicate canteen effects
 local REPLICATE_CONDS = {
 	TF_COND_CRITBOOSTED_USER_BUFF,
-	TF_COND_INVULNERABLE_USER_BUFF
+	TF_COND_INVULNERABLE_USER_BUFF,
 }
 
 -- we can't expect lua to do all the work - joshua graham
@@ -147,7 +147,32 @@ local BOT_ATTACK_VSCRIPT = "activator.PressFireButton(0.1)"
 local activeBuiltBots = {}
 local activeBuiltBotsOwner = {}
 
+local lingeringBuiltBots = {}
+
 local inWave = false
+
+local PACK_ITEMS = {
+	"item_currencypack_small",
+	"item_currencypack_medium",
+	"item_currencypack_large",
+	"item_currencypack_custom",
+}
+-- delete cash dropped by bots that were built by players
+-- due to inheriting TFBot's currency count
+for _, packName in pairs(PACK_ITEMS) do
+	ents.AddCreateCallback(packName, function(pack)
+		timer.Simple(0, function()
+			local handle = pack.m_hOwnerEntity:GetHandleIndex()
+
+			if not lingeringBuiltBots[handle] then
+				return
+			end
+
+			pack:Remove()
+			lingeringBuiltBots[handle] = nil
+		end)
+	end)
+end
 
 function OnWaveInit()
 	inWave = false
@@ -236,7 +261,7 @@ local function getCursorPos(player)
 end
 
 local function applyName(bot, name, owner)
-	local displayName = name.." (" .. owner.m_szNetname .. ")"
+	local displayName = name .. " (" .. owner.m_szNetname .. ")"
 	bot.m_szNetname = displayName
 
 	bot:SetFakeClientConVar("name", displayName)
@@ -251,7 +276,6 @@ local function applyUniversalData(bot, data)
 		local vscript = ("activator.SetScaleOverride(%s)"):format(tostring(data.Scale))
 		bot:RunScriptCode(vscript, bot)
 	end
-
 
 	if data.Items then
 		for _, itemName in pairs(data.Items) do
@@ -362,6 +386,7 @@ local function setupBot(bot, owner, handle, building)
 	owner.BuiltBotSentry = tostring(building:GetHandleIndex())
 
 	activeBuiltBots[handle] = bot
+	lingeringBuiltBots[botHandle] = true
 	activeBuiltBotsOwner[botHandle] = owner
 
 	callbacks.damaged = bot:AddCallback(ON_DAMAGE_RECEIVED_POST, function()
@@ -499,11 +524,22 @@ function SentrySpawned(_, building)
 			botSpawn:SetAttributeValue("damage bonus HIDDEN", 0.0001)
 		end
 
-		callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
-			removeCallbacks(botSpawn, callbacks)
+		-- callbacks.spawned = botSpawn:AddCallback(ON_SPAWN, function()
+		-- 	removeCallbacks(botSpawn, callbacks)
+		-- 	if IsValid(newBuilding) then
+		-- 		newBuilding:Remove()
+		-- 	end
+		-- end)
+		local spawnedCallback
+		spawnedCallback = botSpawn:AddCallback(ON_SPAWN, function()
 			if IsValid(newBuilding) then
 				newBuilding:Remove()
 			end
+
+			lingeringBuiltBots[handle] = nil
+
+			botSpawn:RemoveCallback(spawnedCallback)
+			spawnedCallback = nil
 		end)
 
 		local cursorPos = Vector(0, 0, 0)
@@ -557,7 +593,9 @@ function SentrySpawned(_, building)
 				end
 
 				local stringStart = ("interrupt_action -lookpos %s %s %s -alwayslook"):format(
-					cursorPos[1], cursorPos[2], cursorPos[3]
+					cursorPos[1],
+					cursorPos[2],
+					cursorPos[3]
 				)
 
 				if altFireHeld then
@@ -583,7 +621,6 @@ function SentrySpawned(_, building)
 
 				lastWrangled = false
 			end
-
 
 			local pos = owner:GetAbsOrigin()
 

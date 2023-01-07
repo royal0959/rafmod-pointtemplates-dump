@@ -95,7 +95,7 @@ WaveSchedule
 			SpawnCount 21
 			WaitBeforeStarting 0
 			WaitBetweenSpawns 0
-			TotalCurrency 0
+			TotalCurrency 5000
 		
 			TFBot
 			{
@@ -126,7 +126,7 @@ WaveSchedule
 			SpawnCount 1
 			WaitBeforeStarting 0
 			WaitBetweenSpawns 0
-			TotalCurrency 0
+			TotalCurrency 500
 		
 			TFBot
 			{
