@@ -1,5 +1,8 @@
 local SHIELD_OFFSET = 100
 
+local SHIELD_DAMAGE_ABSORB_MULT = 0.8
+local SHIELD_DAMAGE_AMMO_REDUCTION_MULT = 0.5
+
 local function DisableShield(shield)
 	shield:SetModel("models/empty.mdl")
 end
@@ -7,7 +10,7 @@ end
 local function UpdateShieldModel(shield, building)
 	local buildingLevel = building.m_iHighestUpgradeLevel
 
-	if buildingLevel <= 1 then
+	if building.m_bDisposableBuilding ~= 0 or buildingLevel <= 1 then
 		shield:SetModel("models/props_mvm/mvm_comically_small_player_shield.mdl")
 	elseif buildingLevel == 2 then
 		shield:SetModel("models/props_mvm/mvm_player_shield.mdl")
@@ -30,6 +33,10 @@ local function UpdateSentryShield(shield, building, owner)
 end
 
 local function SetupPSGSentry(building, owner)
+	if building.m_bDisposableBuilding ~= 0 then
+		building["$attributeoverride"] = 1
+	end
+
 	local shield = ents.CreateWithKeys("entity_medigun_shield", {
 		teamnum = owner.m_iTeamNum,
 		spawnflags = 1,
@@ -37,6 +44,39 @@ local function SetupPSGSentry(building, owner)
 
 	UpdateSentryShield(shield, building, owner)
 	-- shield:SetParent(building)
+
+	building:AddCallback(ON_REMOVE, function()
+		shield:Remove()
+	end)
+
+	local lastDamageTick = TickCount()
+	shield:AddCallback(ON_DAMAGE_RECEIVED_POST, function(_, damageinfo)
+		local curTick = TickCount()
+		lastDamageTick = curTick
+
+		shield:Color("200 0 100")
+
+		timer.Simple(0.1, function()
+			if not IsValid(shield) then
+				return
+			end
+
+			-- prevents constant flickering on constant damage
+			if lastDamageTick ~= curTick then
+				return
+			end
+
+			shield:Color("255 255 255")
+		end)
+
+		if building.m_bDisposableBuilding ~= 0 then
+			building.m_iAmmoShells = building.m_iAmmoShells - (damageinfo.Damage * SHIELD_DAMAGE_AMMO_REDUCTION_MULT)
+			return
+		end
+
+		damageinfo.Damage = damageinfo.Damage * SHIELD_DAMAGE_ABSORB_MULT
+		building:TakeDamage(damageinfo)
+	end)
 
 	local updateLoop
 	updateLoop = timer.Create(0.1, function ()

@@ -82,8 +82,9 @@ WaveSchedule
 		
 			TFBot
 			{
-				Template T_TFBot_Giant_Heavyweapons
-				Attributes SuppressFire
+				Class Heavy
+				Health 50000
+				// Attributes SuppressFire
 			}
 		}
 	}
