@@ -3,7 +3,8 @@ local COOLDOWN = 1
 local RAGE_GAIN_PER_PROJECTILE = 10
 
 local DEFLECT_PARTICLE = "ExplosionCore_sapperdestroyed"
-local DEFLECT_AUDIO = "sound/barret_arm_fizzle.wav"
+local DEFLECT_AUDIO = "sound/weapons/barret_arm_zap.wav"
+local AIRBLAST_AUDIO = "sound/weapons/barret_arm_zap.wav"
 
 local AIRBLAST_RANGE = 100
 
@@ -61,6 +62,8 @@ local function DR_Blast(activator)
 			return
 		end
 	end
+
+	activator:PlaySound(AIRBLAST_AUDIO)
 
 	cooldowns[handle] = CurTime() + COOLDOWN
 
