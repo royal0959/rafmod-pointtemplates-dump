@@ -135,6 +135,10 @@ local REPLICATE_CONDS = {
 	TF_COND_INVULNERABLE_USER_BUFF,
 }
 
+-- for making "sentry fire rate" upgrade replicate to bot as a different attribute
+local SENTRY_FIRERATE_REPLICATE_ATTR = "halloween fire rate bonus" -- should be a unique attribute that isn't applied by anything else
+local SENTRY_FIRERATE_REPLICATE_MULT = 1
+
 -- we can't expect lua to do all the work - joshua graham
 -- local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(0.1)"
 local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000)"
@@ -163,10 +167,14 @@ local PACK_ITEMS = {
 -- due to inheriting TFBot's currency count
 for _, packName in pairs(PACK_ITEMS) do
 	ents.AddCreateCallback(packName, function(pack)
+		local disablePickUp = pack:AddCallback(ON_SHOULD_COLLIDE, function()
+			return false
+		end)
 		timer.Simple(0, function()
 			local handle = pack.m_hOwnerEntity:GetHandleIndex()
 
 			if not lingeringBuiltBots[handle] then
+				pack:RemoveCallback(disablePickUp)
 				return
 			end
 
@@ -505,6 +513,7 @@ function SentrySpawned(_, building)
 	local botSpawn = findFreeBot()
 
 	if not botSpawn then
+		owner:Print(PRINT_TARGET_CENTER, "GLOBAL BOT LIMIT REACHED")
 		newBuilding:Remove()
 		return
 	end
@@ -592,6 +601,27 @@ function SentrySpawned(_, building)
 				if owner:InCond(cond) ~= 0 then
 					botSpawn:AddCond(cond, 0.25, owner)
 				end
+			end
+
+			local pda = owner:GetPlayerItemBySlot(LOADOUT_POSITION_PDA)
+			local ownerFireRateUpgrade = pda:GetAttributeValue("engy sentry fire rate increased")
+
+			if ownerFireRateUpgrade then
+				botSpawn:SetAttributeValue(SENTRY_FIRERATE_REPLICATE_ATTR, ownerFireRateUpgrade * SENTRY_FIRERATE_REPLICATE_MULT)
+			else
+				botSpawn:SetAttributeValue(SENTRY_FIRERATE_REPLICATE_ATTR, nil)
+			end
+
+			local botWeapon = botSpawn.m_hActiveWeapon
+			local botWeaponClip = botWeapon.m_iClip1
+			if botWeaponClip then
+				local clipBonusMult = botSpawn:GetAttributeValueByClass("mult_clipsize", 1)
+				local clipBonusAtomic = botSpawn:GetAttributeValueByClass("mult_clipsize_upgrade_atomic", 0)
+		
+				local maxClip = (4 * clipBonusMult) + clipBonusAtomic -- TODO: make this account for different classes other than soldier
+				local clipCalcMult = 150 / maxClip
+				-- m_iAmmoShells max is 150
+				newBuilding.m_iAmmoShells = botWeaponClip * clipCalcMult
 			end
 
 			if owner.m_hActiveWeapon.m_iClassname == "tf_weapon_laser_pointer" then
