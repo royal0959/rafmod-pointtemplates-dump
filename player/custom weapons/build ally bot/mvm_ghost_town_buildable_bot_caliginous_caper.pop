@@ -10,7 +10,8 @@ WaveSchedule
 	FixedRespawnWaveTime Yes
 	EventPopfile Halloween
 
-	ExtraBotSlots 6
+	RobotLimit 26
+	MaxSpectators 4
     
 	LuaScriptFile "scripts/build_ally_bot.lua"
 

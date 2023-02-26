@@ -148,7 +148,9 @@ local BOT_CLEAR_RESTRICTIONS_VSCRIPT = "activator.ClearAllWeaponRestrictions()"
 
 local BOT_ATTACK_VSCRIPT = "activator.PressFireButton(0.1)"
 
-local activeBuiltBots = {}
+local activeBots = {} -- bots alive
+
+local activeBuiltBots = {} -- bot built by player
 local activeBuiltBotsOwner = {}
 
 local lingeringBuiltBots = {}
@@ -220,7 +222,7 @@ function OnWaveStart()
 	for _, bot in pairs(activeBuiltBots) do
 		bot:ResetFakeSendProp("m_iTeamNum")
 		bot.m_iTeamNum = 2
-		bot:RemoveCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
+		-- bot:RemoveCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 		bot:SetAttributeValue("ignored by enemy sentries", nil)
 		bot:SetAttributeValue("ignored by bots", nil)
 		bot:SetAttributeValue("damage bonus HIDDEN", nil)
@@ -228,8 +230,18 @@ function OnWaveStart()
 end
 
 -- convert damage dealt by bots to owner
+-- and nullify damage taken by built bot during prewave
 local function addGlobalDamageCallback(player)
 	player:AddCallback(ON_DAMAGE_RECEIVED_PRE, function(_, damageinfo)
+		local isBot = activeBots[player:GetHandleIndex()]
+		if isBot and not inWave then
+			-- nullify attacks in prewave
+			damageinfo.Damage = 0
+			damageinfo.Inflictor = nil
+			damageinfo.Weapon = nil
+			return true
+		end
+
 		local attacker = damageinfo.Attacker
 
 		if not attacker then
@@ -414,6 +426,7 @@ local function setupBot(bot, owner, handle, building)
 	owner.BuiltBotHandle = tostring(botHandle)
 	owner.BuiltBotSentry = tostring(building:GetHandleIndex())
 
+	activeBots[botHandle] = true
 	activeBuiltBots[handle] = bot
 	lingeringBuiltBots[botHandle] = true
 	activeBuiltBotsOwner[botHandle] = owner
@@ -430,6 +443,7 @@ local function setupBot(bot, owner, handle, building)
 		owner.BuiltBotHandle = false
 		owner.BuiltBotSentry = false
 
+		activeBots[botHandle] = nil
 		activeBuiltBots[handle] = nil
 		activeBuiltBotsOwner[botHandle] = nil
 
@@ -564,7 +578,7 @@ function SentrySpawned(_, building)
 		if not inWave then
 			botSpawn:SetFakeSendProp("m_iTeamNum", 2)
 			botSpawn.m_iTeamNum = 1
-			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
+			-- botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 			botSpawn:SetAttributeValue("ignored by enemy sentries", 1)
 			botSpawn:SetAttributeValue("ignored by bots", 1)
 			botSpawn:SetAttributeValue("damage bonus HIDDEN", 0.0001)
