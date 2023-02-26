@@ -1,5 +1,3 @@
--- TODO: notify player if bot can't be built because robot limit is reached
-
 local BOTS_VARIANTS = {
 	soldier = {
 		Display = "Soldier",
@@ -220,6 +218,7 @@ function OnWaveStart()
 
 	-- bots spawned in prewave are put to spectate/gray team so they don't take up slot
 	for _, bot in pairs(activeBuiltBots) do
+		bot:ResetFakeSendProp("m_iTeamNum")
 		bot.m_iTeamNum = 2
 		bot:RemoveCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 		bot:SetAttributeValue("ignored by enemy sentries", nil)
@@ -433,6 +432,8 @@ local function setupBot(bot, owner, handle, building)
 
 		activeBuiltBots[handle] = nil
 		activeBuiltBotsOwner[botHandle] = nil
+
+		bot:ResetFakeSendProp("m_iTeamNum")
 		bot.m_iTeamNum = 1
 
 		removeCallbacks(bot, callbacks)
@@ -561,6 +562,7 @@ function SentrySpawned(_, building)
 		end)
 
 		if not inWave then
+			botSpawn:SetFakeSendProp("m_iTeamNum", 2)
 			botSpawn.m_iTeamNum = 1
 			botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
 			botSpawn:SetAttributeValue("ignored by enemy sentries", 1)
@@ -579,6 +581,8 @@ function SentrySpawned(_, building)
 			if IsValid(newBuilding) then
 				newBuilding:Remove()
 			end
+
+			botSpawn:ResetFakeSendProp("m_iTeamNum")
 
 			lingeringBuiltBots[handle] = nil
 
