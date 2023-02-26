@@ -171,6 +171,11 @@ for _, packName in pairs(PACK_ITEMS) do
 			return false
 		end)
 		timer.Simple(0, function()
+			-- failsafe for a glitch where spamming rebuild can very rarely drop cash
+			if not inWave then
+				pack:Remove()
+			end
+
 			local handle = pack.m_hOwnerEntity:GetHandleIndex()
 
 			if not lingeringBuiltBots[handle] then
@@ -523,6 +528,7 @@ function SentrySpawned(_, building)
 	timer.Simple(0, function()
 		if not IsValid(newBuilding) then
 			print("newBuilding was destroyed before logic could happen")
+			botSpawn:Suicide()
 			return
 		end
 		botSpawn:SetAbsOrigin(origin)
