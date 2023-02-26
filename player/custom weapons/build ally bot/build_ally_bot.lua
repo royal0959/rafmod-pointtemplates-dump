@@ -170,7 +170,22 @@ for _, packName in pairs(PACK_ITEMS) do
 				return
 			end
 
+			pack:SetAbsOrigin(Vector(0, -100000, 0))
+
+			local objectiveResource = ents.FindByClass("tf_objective_resource")
+
+			local moneyBefore = objectiveResource.m_nMvMWorldMoney
 			pack:Remove()
+			local moneyAfter = objectiveResource.m_nMvMWorldMoney
+
+			local packPrice = moneyBefore - moneyAfter
+			-- print("price: "..tostring(packPrice))
+			local mvmStats = ents.FindByClass("tf_mann_vs_machine_stats")
+
+			local vscript = "NetProps.SetPropInt(activator, \"%s.nCreditsDropped\", NetProps.GetPropInt(activator, \"%s.nCreditsDropped\") - %s)"
+			local curWave = "m_currentWaveStats"
+			mvmStats:RunScriptCode(vscript:format(curWave, curWave, packPrice), mvmStats, mvmStats)
+
 			lingeringBuiltBots[handle] = nil
 		end)
 	end)
@@ -460,6 +475,11 @@ function TierPurchase(tier, activator)
 end
 
 function SentrySpawned(_, building)
+	if not IsValid(building) then
+		print("building was destroyed before logic could register lol")
+		return
+	end
+
 	local owner = building.m_hBuilder
 	local handle = owner:GetHandleIndex()
 
@@ -492,6 +512,10 @@ function SentrySpawned(_, building)
 	local callbacks = setupBot(botSpawn, owner, handle, newBuilding)
 
 	timer.Simple(0, function()
+		if not IsValid(newBuilding) then
+			print("newBuilding was destroyed before logic could happen")
+			return
+		end
 		botSpawn:SetAbsOrigin(origin)
 		botSpawn:SwitchClassInPlace("Soldier")
 
