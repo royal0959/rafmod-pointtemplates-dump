@@ -143,8 +143,8 @@ local SENTRY_FIRERATE_REPLICATE_MULT = 1
 -- we can't expect lua to do all the work - joshua graham
 -- local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(0.1)"
 local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000)"
-local BOT_DISABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(0.1)"
-local BOT_ENABLE_VISION_VSCRIPT = "activator.SetMaxVisionRangeOverride(100000)"
+local BOT_DISABLE_VISION_VSCRIPT = "activator.SetDifficulty(0); activator.SetMaxVisionRangeOverride(0.1)"
+local BOT_ENABLE_VISION_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000)"
 local BOT_SET_WEPRESTRICTION_VSCRIPT = "activator.AddWeaponRestriction(%s)"
 local BOT_CLEAR_RESTRICTIONS_VSCRIPT = "activator.ClearAllWeaponRestrictions()"
 -- local BOT_CLEAR_FOCUS = "activator.ClearAttentionFocus()"
@@ -306,7 +306,7 @@ local function getCursorPos(player, bot)
 
 	local DefaultTraceInfo = {
 		start = player,
-		distance = 10000,
+		distance = 1000,
 		angles = eyeAngles,
 		mask = MASK_SOLID,
 		collisiongroup = TFCOLLISION_GROUP_ROCKETS, --COLLISION_GROUP_DEBRIS,
@@ -680,6 +680,8 @@ function SentrySpawned(_, building)
 
 					lastWrangled = true
 				end
+
+				botSpawn:RunScriptCode("activator.ClearAttentionFocus()", botSpawn)
 
 				local altFireHeld = owner.m_nButtons & IN_ATTACK2 ~= 0
 				local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
