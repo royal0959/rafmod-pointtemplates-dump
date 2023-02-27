@@ -169,6 +169,23 @@ local PACK_ITEMS = {
 }
 -- delete cash dropped by bots that were built by players
 -- due to inheriting TFBot's currency count
+local function removeCashSafe(pack)
+	pack:SetAbsOrigin(Vector(0, -100000, 0))
+	local objectiveResource = ents.FindByClass("tf_objective_resource")
+
+	local moneyBefore = objectiveResource.m_nMvMWorldMoney
+	pack:Remove()
+	local moneyAfter = objectiveResource.m_nMvMWorldMoney
+
+	local packPrice = moneyBefore - moneyAfter
+	-- print("price: "..tostring(packPrice))
+	local mvmStats = ents.FindByClass("tf_mann_vs_machine_stats")
+
+	local vscript = "NetProps.SetPropInt(activator, \"%s.nCreditsDropped\", NetProps.GetPropInt(activator, \"%s.nCreditsDropped\") - %s)"
+	local curWave = "m_currentWaveStats"
+	mvmStats:RunScriptCode(vscript:format(curWave, curWave, packPrice), mvmStats, mvmStats)
+end
+
 for _, packName in pairs(PACK_ITEMS) do
 	ents.AddCreateCallback(packName, function(pack)
 		local disablePickUp = pack:AddCallback(ON_SHOULD_COLLIDE, function()
@@ -177,7 +194,7 @@ for _, packName in pairs(PACK_ITEMS) do
 		timer.Simple(0, function()
 			-- failsafe for a glitch where spamming rebuild can very rarely drop cash
 			if not inWave then
-				pack:Remove()
+				removeCashSafe(pack)
 			end
 
 			local handle = pack.m_hOwnerEntity:GetHandleIndex()
@@ -187,21 +204,7 @@ for _, packName in pairs(PACK_ITEMS) do
 				return
 			end
 
-			pack:SetAbsOrigin(Vector(0, -100000, 0))
-
-			local objectiveResource = ents.FindByClass("tf_objective_resource")
-
-			local moneyBefore = objectiveResource.m_nMvMWorldMoney
-			pack:Remove()
-			local moneyAfter = objectiveResource.m_nMvMWorldMoney
-
-			local packPrice = moneyBefore - moneyAfter
-			-- print("price: "..tostring(packPrice))
-			local mvmStats = ents.FindByClass("tf_mann_vs_machine_stats")
-
-			local vscript = "NetProps.SetPropInt(activator, \"%s.nCreditsDropped\", NetProps.GetPropInt(activator, \"%s.nCreditsDropped\") - %s)"
-			local curWave = "m_currentWaveStats"
-			mvmStats:RunScriptCode(vscript:format(curWave, curWave, packPrice), mvmStats, mvmStats)
+			removeCashSafe(pack)
 
 			lingeringBuiltBots[handle] = nil
 		end)
