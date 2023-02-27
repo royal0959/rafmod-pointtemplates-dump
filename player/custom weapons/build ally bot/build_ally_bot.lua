@@ -4,6 +4,9 @@ local BOTS_VARIANTS = {
 		Class = "Soldier",
 		Model = "models/bots/soldier/bot_soldier.mdl",
 
+		-- TODO
+		MaxClip = 4,
+
 		DefaultAttributes = {},
 
 		Tiers = {
@@ -229,6 +232,37 @@ function OnWaveStart()
 	end
 end
 
+
+local function checkOnHit(parent, damageinfo)
+	local attacker = damageinfo.Attacker
+
+	if not attacker then
+		return
+	end
+
+	local handle = attacker:GetHandleIndex()
+
+	local owner = activeBuiltBotsOwner[handle]
+
+	if not owner then
+		return
+	end
+
+	if parent == owner then
+		return
+	end
+
+	damageinfo.Attacker = owner
+
+	return true
+end
+
+ents.AddCreateCallback("tank_boss", function(tank)
+	tank:AddCallback(ON_DAMAGE_RECEIVED_PRE, function(_, damageinfo)
+		return checkOnHit(tank, damageinfo)
+	end)
+end)
+
 -- convert damage dealt by bots to owner
 -- and nullify damage taken by built bot during prewave
 local function addGlobalDamageCallback(player)
@@ -242,27 +276,7 @@ local function addGlobalDamageCallback(player)
 			return true
 		end
 
-		local attacker = damageinfo.Attacker
-
-		if not attacker then
-			return
-		end
-
-		local handle = attacker:GetHandleIndex()
-
-		local owner = activeBuiltBotsOwner[handle]
-
-		if not owner then
-			return
-		end
-
-		if player == owner then
-			return
-		end
-
-		damageinfo.Attacker = owner
-
-		return true
+		return checkOnHit(player, damageinfo)
 	end)
 end
 

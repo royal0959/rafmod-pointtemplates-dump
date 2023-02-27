@@ -135,4 +135,46 @@ WaveSchedule
 			}
 		}
 	}
+	Wave // Wave 3
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name ""
+			WaitForAllDead ""
+			TotalCount 1
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+		
+			TotalCurrency 0
+		
+			Tank
+			{
+				Name "tankboss"
+				StartingPathTrackNode "boss_path_1"
+				Health 10000
+				Speed 75
+				Skin 0
+		
+				OnKilledOutput {}
+				OnBombDroppedOutput
+				{
+					Target boss_deploy_relay
+					Action Trigger
+				}
+			}
+		}
+	}
 }
