@@ -33,12 +33,13 @@ local BOTS_VARIANTS = {
 				Attributes = {
 					["damage bonus"] = 1.1,
 
-					-- ["reload full clip at once"] = 1,
+					["reload full clip at once"] = 1,
 					["force fire full clip"] = 1,
+					["projectile spread angle penalty"] = 3,
 
-					["faster reload rate"] = 0.6,
+					["faster reload rate"] = 5,
 					["fire rate bonus"] = 0.1,
-					["clip size upgrade atomic"] = 6.0,
+					["clip size upgrade atomic"] = 3.0,
 					["Projectile speed increased"] = 0.65,
 				},
 			},
@@ -51,7 +52,7 @@ local BOTS_VARIANTS = {
 				HealthIncrease = 200,
 
 				Attributes = {
-					-- ["damage bonus"] = 1.25,
+					["damage bonus"] = 1.2,
 
 					["faster reload rate"] = -0.8,
 					["fire rate bonus"] = 0.5,
@@ -73,7 +74,7 @@ local BOTS_VARIANTS = {
 					["fire rate bonus"] = 2,
 					["Projectile speed increased"] = 0.5,
 
-					["move speed bonus"] = 0.5,
+					["move speed bonus"] = 0.6,
 
 					["damage force reduction"] = 0.4,
 					["airblast vulnerability multiplier"] = 0.4,
@@ -350,7 +351,17 @@ local function applyUniversalData(bot, data)
 	end
 end
 
-local function applyDefaultData(bot, class)
+local function applyMaxHealthUpgrade(owner, bot)
+	local pda = owner:GetPlayerItemBySlot(LOADOUT_POSITION_PDA)
+	local healthBonusMult = pda:GetAttributeValue("engy building health bonus") or 1
+
+	-- each upgrade gives 100 extra health
+	local extraHealth = 100 * (healthBonusMult - 1)
+	local curMaxHealthBuff = bot:GetAttributeValue("hidden maxhealth non buffed") or 0
+	bot:SetAttributeValue("hidden maxhealth non buffed", curMaxHealthBuff + extraHealth)
+end
+
+local function applyDefaultData(owner, bot, class)
 	local data = BOTS_VARIANTS[class]
 
 	if data.DefaultAttributes then
@@ -364,6 +375,8 @@ local function applyDefaultData(bot, class)
 	bot:SetAttributeValue("hidden maxhealth non buffed", nil)
 
 	applyUniversalData(bot, data)
+
+	applyMaxHealthUpgrade(owner, bot)
 end
 
 local function applyTierData(bot, data)
@@ -384,6 +397,8 @@ local function applyTierData(bot, data)
 			bot:AddCond(id)
 		end
 	end
+
+	bot:RefillAmmo()
 end
 
 -- remove lingering stuff
@@ -413,7 +428,7 @@ local function getCurBotTier(owner)
 	return owner:GetPlayerItemBySlot(2):GetAttributeValue("throwable fire speed")
 end
 
-local function applyBotTier(bot, class, tier)
+local function applyBotTier(owner, bot, class, tier)
 	if tier > 2 then
 		removePreviousTier(bot, class, tier - 1)
 	end
@@ -421,6 +436,8 @@ local function applyBotTier(bot, class, tier)
 	local tierData = BOTS_VARIANTS[class].Tiers[tier]
 
 	applyTierData(bot, tierData)
+
+	applyMaxHealthUpgrade(owner, bot)
 end
 
 local function setupBot(bot, owner, handle, building)
@@ -514,7 +531,7 @@ function TierPurchase(tier, activator)
 		return
 	end
 
-	applyBotTier(bot, "soldier", tier)
+	applyBotTier(activator, bot, "soldier", tier)
 end
 
 function SentrySpawned(_, building)
@@ -568,9 +585,9 @@ function SentrySpawned(_, building)
 
 		if botTier and botTier > 1 then
 			print("applying tier", botTier)
-			applyBotTier(botSpawn, "soldier", botTier)
+			applyBotTier(owner, botSpawn, "soldier", botTier)
 		else
-			applyDefaultData(botSpawn, "soldier")
+			applyDefaultData(owner, botSpawn, "soldier")
 		end
 
 		botSpawn:RunScriptCode(BOT_SETUP_VSCRIPT, botSpawn, botSpawn)
