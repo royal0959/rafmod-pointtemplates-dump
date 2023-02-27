@@ -301,7 +301,7 @@ local function getEyeAngles(player)
 	return Vector(pitch, yaw, 0)
 end
 
-local function getCursorPos(player)
+local function getCursorPos(player, bot)
 	local eyeAngles = getEyeAngles(player)
 
 	local DefaultTraceInfo = {
@@ -310,6 +310,7 @@ local function getCursorPos(player)
 		angles = eyeAngles,
 		mask = MASK_SOLID,
 		collisiongroup = TFCOLLISION_GROUP_ROCKETS, --COLLISION_GROUP_DEBRIS,
+		filter = { player, bot }
 	}
 	local trace = util.Trace(DefaultTraceInfo)
 	return trace.HitPos
@@ -683,7 +684,7 @@ function SentrySpawned(_, building)
 				local altFireHeld = owner.m_nButtons & IN_ATTACK2 ~= 0
 				local attackHeld = owner.m_nButtons & IN_ATTACK ~= 0
 
-				cursorPos = getCursorPos(owner)
+				cursorPos = getCursorPos(owner, botSpawn)
 
 				if attackHeld then
 					botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
@@ -700,7 +701,7 @@ function SentrySpawned(_, building)
 						.. (" -pos %s %s %s -distance 1"):format(cursorPos[1], cursorPos[2], cursorPos[3])
 				end
 
-				local interruptAction = ("%s -duration 420000"):format(stringStart)
+				local interruptAction = ("%s -duration 0.1"):format(stringStart)
 
 				botSpawn:BotCommand(interruptAction)
 				return
