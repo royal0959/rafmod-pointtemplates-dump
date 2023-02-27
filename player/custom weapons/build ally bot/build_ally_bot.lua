@@ -195,6 +195,7 @@ for _, packName in pairs(PACK_ITEMS) do
 			-- failsafe for a glitch where spamming rebuild can very rarely drop cash
 			if not inWave then
 				removeCashSafe(pack)
+				return
 			end
 
 			local handle = pack.m_hOwnerEntity:GetHandleIndex()
