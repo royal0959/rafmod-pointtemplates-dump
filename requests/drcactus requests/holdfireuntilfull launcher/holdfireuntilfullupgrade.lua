@@ -3,12 +3,21 @@ local holdfirePlayers = {}
 local BASE_CLIP = 4
 
 function EnableHoldFire(_, activator)
+	local handleIndex = activator:GetHandleIndex()
+
 	local primary = activator:GetPlayerItemBySlot(LOADOUT_POSITION_PRIMARY)
 
 	local lastClip = primary.m_iClip1
 	local canAttack = true
 
-	local logic = timer.Create(0.1, function()
+	local logic
+	logic = timer.Create(0.1, function()
+		if not IsValid(activator) then
+			timer.Stop(logic)
+			holdfirePlayers[handleIndex] = nil
+			return
+		end
+
 		local clipBonusMult = primary:GetAttributeValueByClass("mult_clipsize", 1)
 		local clipBonusAtomic = primary:GetAttributeValueByClass("mult_clipsize_upgrade_atomic", 0)
 
@@ -54,7 +63,7 @@ function EnableHoldFire(_, activator)
 		DisableHoldFire(_, activator)
 	end)
 
-	holdfirePlayers[activator:GetHandleIndex()] = data
+	holdfirePlayers[handleIndex] = data
 end
 
 function DisableHoldFire(_, activator)
@@ -71,6 +80,6 @@ function DisableHoldFire(_, activator)
 	holdfirePlayers[index] = nil
 end
 
-function OnPlayerDisconnected(player)
-	DisableHoldFire(nil, player)
-end
+-- function OnPlayerDisconnected(player)
+-- 	DisableHoldFire(nil, player)
+-- end
