@@ -1,0 +1,109 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 5
+
+	LuaScriptFile "scripts/holdfireuntilfullupgrade.lua"
+
+	ExtendedUpgrades
+	{
+		whatever
+		{
+			Name "holdfireuntilfull"
+			Description "the voices" 
+			Attribute "cannot giftwrap" // attribute is irrelevant
+			Cap 1 
+			Increment 1
+			Cost 0
+
+			AllowedWeapons 
+			{
+				ClassName "TF_WEAPON_ROCKETLAUNCHER"
+			}
+
+			// put these OnApply and OnDowngrade on the upgrade(s)
+			// that you want to have HoldFireUntilFull with
+			OnApply
+			{
+				Output "popscript,$EnableHoldFire,,0"
+			}
+			OnDowngrade
+			{
+				Output "popscript,$DisableHoldFire,,0"
+			}
+		}
+	}
+
+	Wave // Wave 1
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Soldier_Spammer
+				CharacterAttributes
+				{
+					"Projectile speed increased" 0.3
+				}
+			}
+		}
+	}
+	Wave // Wave 2
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Soldier_Spammer
+				CharacterAttributes
+				{
+					"Projectile speed increased" 0.3
+				}
+			}
+		}
+	}
+}
