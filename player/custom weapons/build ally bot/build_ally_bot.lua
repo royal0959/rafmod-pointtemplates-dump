@@ -359,8 +359,8 @@ local function applyMaxHealthUpgrade(owner, bot)
 	local pda = owner:GetPlayerItemBySlot(LOADOUT_POSITION_PDA)
 	local healthBonusMult = pda:GetAttributeValue("engy building health bonus") or 1
 
-	-- each upgrade gives 100 extra health
-	local extraHealth = 100 * (healthBonusMult - 1)
+	-- each upgrade gives 150 extra health
+	local extraHealth = 150 * (healthBonusMult - 1)
 	local curMaxHealthBuff = bot:GetAttributeValue("hidden maxhealth non buffed") or 0
 	bot:SetAttributeValue("hidden maxhealth non buffed", curMaxHealthBuff + extraHealth)
 end
