@@ -1,0 +1,103 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 5
+
+	LuaScriptFile "scripts/lua_knockback_rage.lua"
+
+	ExtendedUpgrades
+	{
+		shield_gen_sentry
+		{
+			Name "knockback rage test"
+			Description "weeee" 
+			Attribute "generate rage on damage"
+			Cap 1 
+			Increment 1
+			Cost 0
+
+			AllowedWeapons 
+			{
+				ClassName "TF_WEAPON_MINIGUN"
+			}
+
+			OnApply
+			{
+				Output "popscript,$KnockbackRageStart,,0.1"
+			}
+			OnDowngrade
+			{
+				Output "popscript,$KnockbackRageStop,,0"
+			}
+		}
+	}
+
+	Wave // Wave 1
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 5
+			SpawnCount 5
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Class Heavy
+				Health 50000
+				Scale 1.5
+				Attributes SuppressFire
+			}
+		}
+	}
+	Wave // Wave 2
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Heavyweapons
+				Attributes SuppressFire
+			}
+		}
+	}
+}
