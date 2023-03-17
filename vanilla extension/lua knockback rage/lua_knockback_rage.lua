@@ -3,16 +3,43 @@ local UPDATE_INTERVAL = 0.015
 
 local knockbackHandles = {}
 
+local RAGE_OVERRIDES_APPLY = {
+    ["throwable fire speed"] = function(activator)
+        activator:GetPlayerItemBySlot(LOADOUT_POSITION_PRIMARY):SetAttributeValue("Set DamageType Ignite", 5)
+    end,
+    ["throwable damage"] = function(activator)
+        activator:GetPlayerItemBySlot(LOADOUT_POSITION_PRIMARY):SetAttributeValue("rocket specialist", 1)
+    end
+}
+local RAGE_OVERRIDES_REMOVE = {
+    ["throwable fire speed"] = function(activator)
+        activator:GetPlayerItemBySlot(LOADOUT_POSITION_PRIMARY):SetAttributeValue("Set DamageType Ignite", nil)
+    end,
+    ["throwable damage"] = function(activator)
+        activator:GetPlayerItemBySlot(LOADOUT_POSITION_PRIMARY):SetAttributeValue("rocket specialist", nil)
+    end
+}
+
 local function lerp(a, b, t)
 	return a + (b - a) * t
 end
 
 local function applyKnockbackRageEffect(activator)
-    activator:AddCond(11)
+    for attr, func in pairs(RAGE_OVERRIDES_APPLY) do
+        if activator:GetPlayerItemBySlot(LOADOUT_POSITION_PRIMARY):GetAttributeValue(attr) then
+            func(activator)
+            break
+        end
+    end
 end
 
 local function removeKnockbackRageEffect(activator)
-    activator:RemoveCond(11)
+    for attr, func in pairs(RAGE_OVERRIDES_REMOVE) do
+        if activator:GetPlayerItemBySlot(LOADOUT_POSITION_PRIMARY):GetAttributeValue(attr) then
+            func(activator)
+            break
+        end
+    end
 end
 
 function KnockbackRageStart(_, activator)
