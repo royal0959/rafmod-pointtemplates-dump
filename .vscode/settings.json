@@ -54,4 +54,7 @@
 		"ON_SHOULD_COLLIDE",
 		"LOADOUT_POSITION_PRIMARY"
 	],
+	"Lua.diagnostics.disable": [
+		"undefined-field"
+	],
 }
