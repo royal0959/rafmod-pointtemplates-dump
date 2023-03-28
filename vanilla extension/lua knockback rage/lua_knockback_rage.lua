@@ -51,7 +51,7 @@ function KnockbackRageStart(_, activator)
 
     knockbackHandles[handleIndex] = timer.Create(UPDATE_INTERVAL, function ()
         if not IsValid(activator) then
-            KnockbackRageStop(nil, activator)
+            KnockbackRageStop(nil, nil, handleIndex)
             return
         end
 
@@ -94,10 +94,13 @@ function KnockbackRageStart(_, activator)
     end, 0)
 end
 
-function KnockbackRageStop(_, activator)
-    activator:ResetFakeSendProp("m_bRageDraining")
-    activator:ResetFakeSendProp("m_flRageMeter")
-    local handleIndex = activator:GetHandleIndex()
+function KnockbackRageStop(_, activator, handle)
+    if activator then
+        activator:ResetFakeSendProp("m_bRageDraining")
+        activator:ResetFakeSendProp("m_flRageMeter")
+    end
+
+    local handleIndex = handle or activator:GetHandleIndex()
 
     timer.Stop(knockbackHandles[handleIndex])
     knockbackHandles[handleIndex] = nil
