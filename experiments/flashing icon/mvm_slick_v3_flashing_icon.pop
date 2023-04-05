@@ -1,0 +1,104 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+    StartingCurrency 1984
+    CanBotsAttackWhileInSpawnRoom no
+    RespawnWaveTime 5
+    AddSentryBusterWhenDamageDealtExceeds 1
+    AddSentryBusterWhenKillCountExceeds 1
+    Advanced 1
+
+	LuaScriptFile "scripts/flashing_icon_test.lua" 
+
+    // Mission
+	// {
+	// 	Objective Engineer  
+
+	// 	InitialCooldown 1
+	// 	Where spawnbot
+	// 	BeginAtWave 1
+	// 	RunForThisManyWaves 1
+	// 	CooldownTime 1
+	// 	DesiredCount 1
+
+	// 	TFBot
+	// 	{
+	// 		Template T_TFBot_Engineer_Sentry_Teleporter
+	// 		TeleportWhere spawnbot
+	// 		Attributes TeleportToHint
+	// 		Health 600
+	// 	}
+	// }	
+
+
+	Mission
+	{
+		Objective Spy  
+
+		InitialCooldown 1
+		Where spawnbot_mission_spy
+		BeginAtWave 1
+		RunForThisManyWaves 1
+		CooldownTime 1
+		DesiredCount 2
+
+		TFBot
+		{
+			Class Spy
+			Skill Expert
+			Name Spy
+		}
+	}
+    Wave // Wave 1
+    {
+        StartWaveOutput
+        {
+            Target wave_start_relay
+            Action Trigger
+        }
+        DoneOutput
+        {
+            Target wave_finished_relay
+            Action Trigger
+        }
+
+        WaveSpawn
+        {
+            Name "aaaa"
+            Where spawnbot
+            TotalCount 50
+            MaxActive 1
+            SpawnCount 1
+            WaitBeforeStarting 0
+            WaitBetweenSpawns 0
+        
+            TotalCurrency 0
+        
+            TFBot
+            {
+                Template T_TFBot_Giant_Heavyweapons
+                Attributes SuppressFire
+            }
+        }
+        WaveSpawn
+        {
+            Name "aaaa"
+            Where spawnbot
+            TotalCount 50
+            MaxActive 1
+            SpawnCount 1
+            WaitBeforeStarting 0
+            WaitBetweenSpawns 0
+        
+            TotalCurrency 0
+        
+            TFBot
+            {
+                Template T_TFBot_Chief_Soldier
+                Attributes SuppressFire
+            }
+        }
+    }
+}
