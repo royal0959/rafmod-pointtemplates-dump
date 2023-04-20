@@ -1,0 +1,151 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 5
+
+	LuaScriptFile "scripts/ultrakill_ball.lua"
+
+	PointTemplates
+	{
+		UltrakillBall
+		{
+			OnSpawnOutput
+			{
+				Target "popscript"
+				Action "$UltrakillSpawned"
+				Delay 0.1
+			}
+			OnParentKilledOutput
+			{
+				Target "popscript"
+				Action "$UltrakillDied"
+				Delay 0.1
+			}
+		}
+	}
+
+	CustomWeapon
+	{
+		"ball"
+		{
+			OriginalItemName "Upgradeable TF_WEAPON_PISTOL"
+
+			// just for testing
+			// you can give it whatever attributes you want
+			// or even replace OriginalItemName, as long as it's still a secondary
+			"weapon spread bonus" 0.0001
+		}
+
+		// for weapon mimic
+		"BALL_SHOOTER"
+		{
+			OriginalItemName "Upgradeable TF_WEAPON_GRENADELAUNCHER"
+
+			// "override projectile type extra" "stunball"
+			"override projectile type" 8
+			"arrow hit kill time" 0.1
+		}
+		"BALL_REDIRECTED_SHOOTER"
+		{
+			OriginalItemName "Upgradeable TF_WEAPON_ROCKETLAUNCHER"
+
+			"Projectile speed increased" 5
+			"projectile trail particle" "flaregun_trail_red"
+			"no explosion particles" 1
+			"Blast radius decreased" 0.0001
+			"mod projectile heat seek power" 360
+			"mod projectile heat aim error" 0
+			"custom projectile model" "models/player/items/crafting/coin_summer2015_gold.mdl"
+		}
+	}
+
+	ExtraLoadoutItems
+	{
+		Scout 
+		{
+			Secondary {Item "ball"}
+		}
+	}
+
+	PlayerItemEquipSpawnTemplate 
+	{
+		Name UltrakillBall
+		ItemName "ball"
+	}
+
+	Wave // Wave 1
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot_front
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Action Idle
+
+				Template T_TFBot_Giant_Soldier_Spammer
+				CharacterAttributes
+				{
+					"no_attack" 1
+					"no_jump" 1
+				}
+			}
+		}
+	}
+	Wave // Wave 2
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 0
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Soldier_Spammer
+				CharacterAttributes
+				{
+					"Projectile speed increased" 0.3
+				}
+			}
+		}
+	}
+}
