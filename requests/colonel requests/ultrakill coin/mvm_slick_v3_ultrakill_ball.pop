@@ -93,43 +93,6 @@ WaveSchedule
 		WaveSpawn
 		{
 			Name "1"
-			Where spawnbot_front
-			TotalCount 50
-			MaxActive 1
-			SpawnCount 1
-			WaitBeforeStarting 0
-			WaitBetweenSpawns 0
-			TotalCurrency 0
-		
-			TFBot
-			{
-				Action Idle
-
-				Template T_TFBot_Giant_Soldier_Spammer
-				CharacterAttributes
-				{
-					"no_attack" 1
-					"no_jump" 1
-				}
-			}
-		}
-	}
-	Wave // Wave 2
-	{
-		StartWaveOutput
-		{
-			Target wave_start_relay
-			Action Trigger
-		}
-		DoneOutput
-		{
-			Target wave_finished_relay
-			Action Trigger
-		}
-
-		WaveSpawn
-		{
-			Name "1"
 			Where spawnbot
 			TotalCount 50
 			MaxActive 1
@@ -140,10 +103,24 @@ WaveSchedule
 		
 			TFBot
 			{
-				Template T_TFBot_Giant_Soldier_Spammer
-				CharacterAttributes
+				SpawnTemplate UltrakillBall
+				Class Scout
+
+				Action Mobber
+
+				Item "ball"
+				Skill Expert
+
+				WeaponRestrictions SecondaryOnly
+				
+				FireWeapon  
 				{
-					"Projectile speed increased" 0.3
+					Delay			1
+					Cooldown		1
+					Repeats			9999
+					Duration		0.1
+					//IfSeeTarget 1 //When set to 1, this task activates only when the bot can see the target player (Default 0 - Always activate)
+					Type			"Secondary"
 				}
 			}
 		}

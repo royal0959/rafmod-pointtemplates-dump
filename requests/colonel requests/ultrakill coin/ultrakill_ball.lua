@@ -62,30 +62,41 @@ ents.AddCreateCallback("tf_projectile_arrow", function(entity)
 				["$positiononly"] = 1,
 			})
 
+			local hurtboxName = tostring(owner:GetHandleIndex()) .. "_CoinHurtbox"
+
+			hurtbox:SetName(hurtboxName)
 			hurtbox:Disable()
 			hurtbox.effects = EF_NODRAW
 
-			hurtbox:AddCallback(ON_SHOULD_COLLIDE, function(_, other)
-				if other == entity then
-					return false
+			hurtbox:AddCallback(ON_SHOULD_COLLIDE, function(_, other, cause)
+				if other:IsPlayer() and cause == ON_SHOULD_COLLIDE_CAUSE_FIRE_WEAPON then
+					return true
 				end
 
-				if not other:IsPlayer() then
-					return false
-				end
+				return false
 
-				-- prevent collision
-				-- without letting bullets pass through
-				if hurtbox:GetAbsOrigin():Distance(other:GetAbsOrigin()) <= 50 then
-					return false
-				end
+				-- if other == entity then
+				-- 	return false
+				-- end
+
+				-- if not other:IsPlayer() then
+				-- 	return false
+				-- end
+
+				-- -- prevent collision
+				-- -- without letting bullets pass through
+				-- if hurtbox:GetAbsOrigin():Distance(other:GetAbsOrigin()) <= 50 then
+				-- 	return false
+				-- end
 			end)
 
 			entity:AddCallback(ON_REMOVE, function()
-				hurtbox:SetAbsOrigin(Vector(0, 0, -100000))
-				timer.Simple(0.1, function()
-					hurtbox:Remove()
-				end)
+				hurtbox:Remove()
+
+				-- if owner:IsBot() then
+					-- owner["$StopRotateTowards"](owner, hurtbox)
+					-- owner:RemoveModule("rotator")
+				-- end
 			end)
 
 			hurtbox["$fakeparentoffset"] = Vector(0, 0, -15)
@@ -124,12 +135,34 @@ ents.AddCreateCallback("tf_projectile_arrow", function(entity)
 					mimic:FaceEntity(target)
 					mimic:FireOnce()
 					mimic:Remove()
-
-					print("shot")
 				end)
 
 				return true
 			end)
+
+			if owner:IsBot() then
+				-- owner:AddModule("rotator")
+				-- owner["$lookat"] = "origin"
+				-- owner["$rotationspeedx"] = 1000
+				-- owner["$rotationspeedy"] = 1000
+				-- owner["$RotateTowards"](owner, hurtboxName)
+
+				local logic
+				logic = timer.Create(0, function ()
+					if not IsValid(hurtbox) then
+						timer.Stop(logic)
+						return
+					end
+
+					owner:FaceEntity(hurtbox)
+					owner:RunScriptCode("activator.PressFireButton(0.1)", owner)
+				end, 0)
+
+				-- owner:BotCommand("stop interrupt action")
+				-- local interruptAction = "interrupt_action -lookposent " ..hurtboxName.. " -killlook -waituntildone -alwayslook -name coinTarget"
+				-- owner:FaceEntity(hurtbox)
+				-- owner:BotCommand(interruptAction)
+			end
 		end)
 	end)
 end)
@@ -173,8 +206,14 @@ local function ball(owner)
 		["$weaponname"] = "BALL_SHOOTER",
 	}, true, true)
 
-	mimic:SetAbsOrigin(owner:GetAbsOrigin() + Vector(0, 0, 15))
-	mimic:SetAbsAngles(getEyeAngles(owner))
+	local eyeAngles = getEyeAngles(owner)
+
+	if owner:IsBot() then
+		eyeAngles = Vector(eyeAngles.x - 15, eyeAngles.y, eyeAngles.z)
+	end
+
+	mimic:SetAbsOrigin(owner:GetAbsOrigin() + Vector(0, 0, 50))
+	mimic:SetAbsAngles(eyeAngles)
 
 	mimic["$SetOwner"](mimic, owner)
 
