@@ -212,7 +212,9 @@ local function ball(owner)
 		eyeAngles = Vector(eyeAngles.x - 15, eyeAngles.y, eyeAngles.z)
 	end
 
-	mimic:SetAbsOrigin(owner:GetAbsOrigin() + Vector(0, 0, 50))
+	local scale = owner.m_flModelScale
+
+	mimic:SetAbsOrigin(owner:GetAbsOrigin() + Vector(0, 0, 50 * scale))
 	mimic:SetAbsAngles(eyeAngles)
 
 	mimic["$SetOwner"](mimic, owner)
