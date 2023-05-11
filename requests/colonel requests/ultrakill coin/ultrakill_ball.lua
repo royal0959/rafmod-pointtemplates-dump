@@ -141,27 +141,25 @@ ents.AddCreateCallback("tf_projectile_arrow", function(entity)
 			end)
 
 			if owner:IsBot() then
-				-- owner:AddModule("rotator")
-				-- owner["$lookat"] = "origin"
-				-- owner["$rotationspeedx"] = 1000
-				-- owner["$rotationspeedy"] = 1000
-				-- owner["$RotateTowards"](owner, hurtboxName)
-
-				local logic
-				logic = timer.Create(0, function ()
+				timer.Simple(0.2, function()
 					if not IsValid(hurtbox) then
-						timer.Stop(logic)
 						return
 					end
 
 					owner:FaceEntity(hurtbox)
 					owner:RunScriptCode("activator.PressFireButton(0.1)", owner)
-				end, 0)
+				end)
 
-				-- owner:BotCommand("stop interrupt action")
-				-- local interruptAction = "interrupt_action -lookposent " ..hurtboxName.. " -killlook -waituntildone -alwayslook -name coinTarget"
-				-- owner:FaceEntity(hurtbox)
-				-- owner:BotCommand(interruptAction)
+				-- local logic
+				-- logic = timer.Create(0, function ()
+				-- 	if not IsValid(hurtbox) then
+				-- 		timer.Stop(logic)
+				-- 		return
+				-- 	end
+
+				-- 	owner:FaceEntity(hurtbox)
+				-- 	owner:RunScriptCode("activator.PressFireButton(0.1)", owner)
+				-- end, 0)
 			end
 		end)
 	end)
