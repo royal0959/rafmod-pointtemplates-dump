@@ -42,7 +42,7 @@ WaveSchedule
 		{
 			Name "1"
 			Where spawnbot
-			TotalCount 5
+			TotalCount 50
 			MaxActive 5
 			SpawnCount 5
 			WaitBeforeStarting 0
@@ -52,6 +52,7 @@ WaveSchedule
 			TFBot
 			{
 				Template T_TFBot_Giant_Heavyweapons
+				Health 5000
 				Attributes SuppressFire
 			}
 		}
