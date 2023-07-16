@@ -1,0 +1,122 @@
+#base robot_standard.pop
+#base robot_giant.pop
+#base template_custom_canteen.pop // Load custom canteen internal logic
+
+WaveSchedule
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 0
+
+	// Load custom canteens
+	LuaScriptFile "scripts/custom_canteens_pack_royal.lua"
+
+	ExtendedUpgrades
+	{
+		//canteens
+		speed_can
+		{
+			Name "Speed Boost Canteen" 
+
+			Attribute "mvm completed challenges bitmask" 
+			Cap 3
+			Increment 1 
+			Cost 25
+
+			///////////////////////////////////////////
+			UIGroup 2
+			Tier 1
+			AllowedWeapons
+			{
+				Classname "tf_powerup_bottle"
+			}
+			OnUpgrade
+			{
+				Output "popscript,$CanteenPurchase,"
+			}
+			OnApply
+			{
+				Output "popscript,$CanteenPurchase,"
+			}
+			///////////////////////////////////////////
+		}
+
+		bullet_res_can
+		{
+			Name "Bullet Resistance Canteen" 
+
+			Attribute "throwable fire speed" 
+			Cap 3
+			Increment 1 
+			Cost 25
+
+			///////////////////////////////////////////
+			UIGroup 2
+			Tier 1
+			AllowedWeapons
+			{
+				Classname "tf_powerup_bottle"
+			}
+			OnUpgrade
+			{
+				Output "popscript,$CanteenPurchase,"
+			}
+			OnApply
+			{
+				Output "popscript,$CanteenPurchase,"
+			}
+			///////////////////////////////////////////
+		}
+	}
+
+	Wave 
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+		
+		WaveSpawn
+		{
+			Where spawnbot
+			TotalCount 5
+			MaxActive 5
+			SpawnCount 5
+			WaitBeforeStarting 0.1
+			WaitBetweenSpawns 0
+			
+			TotalCurrency 0
+			
+			TFBot
+			{ 
+				Class Heavyweapons
+				Attributes SuppressFire
+			}
+		}
+
+		WaveSpawn
+		{
+			Where spawnbot
+			TotalCount 1
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			
+			TotalCurrency 0
+			
+			TFBot
+			{ 
+				Template T_TFBot_Giant_Heavyweapons
+				tag bot_giant
+				Attributes SuppressFire
+			}
+		}
+	}
+}
