@@ -1,5 +1,13 @@
 CUSTOM_CANTEENS = {}
 
+local VANILLA_CANTEEN_CHARGE_ATTRIBUTES = {
+	"critboost",
+	"ubercharge",
+	"refill_ammo",
+	"recall",
+	"building instant upgrade",
+}
+
 local canteenPlayers = {}
 
 local function canteenMessage(activator)
@@ -13,6 +21,16 @@ local function canteenMessage(activator)
 	end
 end
 
+local function hasVanillaCharges(canteen)
+	for _, attr in pairs(VANILLA_CANTEEN_CHARGE_ATTRIBUTES) do
+		if canteen:GetAttributeValue(attr) then
+			return true
+		end
+	end
+
+	return false
+end
+
 function CanteenSpawn(_, activator)
 	local index = activator:GetHandleIndex()
 	canteenPlayers[index] = {
@@ -23,7 +41,7 @@ function CanteenSpawn(_, activator)
 	canteen.i_LastCanteenCharges = canteen.m_usNumCharges
 
 	local think
-	think = timer.Create(0.1, function ()
+	think = timer.Create(0.1, function()
 		local function stop()
 			canteenPlayers[index] = nil
 			timer.Stop(think)
@@ -41,11 +59,16 @@ function CanteenSpawn(_, activator)
 
 		if activator:GetPlayerItemBySlot(LOADOUT_POSITION_ACTION) ~= canteen then
 			print("canteen changed")
-			stop()
+			timer.Stop(think)
 			return
 		end
 
 		if not canteenPlayers[index].CustomCanteenData then
+			return
+		end
+
+		if hasVanillaCharges(canteen) then
+			canteenPlayers[index].CustomCanteenData = nil
 			return
 		end
 
@@ -66,6 +89,12 @@ function CanteenSpawn(_, activator)
 		canteenPlayers[index].CustomCanteenData.Effect(activator)
 
 		canteen.i_LastCanteenCharges = canteen.m_usNumCharges
+
+		-- remove canteen description when charges are out
+		if canteen.m_usNumCharges <= 0 then
+			canteen:SetAttributeValue("special item description", nil)
+			return
+		end
 	end, 0)
 end
 

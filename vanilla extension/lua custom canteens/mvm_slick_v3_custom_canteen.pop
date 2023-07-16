@@ -25,7 +25,6 @@ WaveSchedule
 
 			///////////////////////////////////////////
 			UIGroup 2
-			Tier 1
 			AllowedWeapons
 			{
 				Classname "tf_powerup_bottle"
@@ -52,7 +51,58 @@ WaveSchedule
 
 			///////////////////////////////////////////
 			UIGroup 2
-			Tier 1
+			AllowedWeapons
+			{
+				Classname "tf_powerup_bottle"
+			}
+			OnUpgrade
+			{
+				Output "popscript,$CanteenPurchase,"
+			}
+			OnApply
+			{
+				Output "popscript,$CanteenPurchase,"
+			}
+			///////////////////////////////////////////
+		}
+
+		reprogram_can
+		{
+			Name "Reprogram Canteen" 
+
+			Attribute "throwable damage" 
+			Cap 3
+			Increment 1 
+			Cost 25
+
+			///////////////////////////////////////////
+			UIGroup 2
+			AllowedWeapons
+			{
+				Classname "tf_powerup_bottle"
+			}
+			OnUpgrade
+			{
+				Output "popscript,$CanteenPurchase,"
+			}
+			OnApply
+			{
+				Output "popscript,$CanteenPurchase,"
+			}
+			///////////////////////////////////////////
+		}
+
+		stealth_can
+		{
+			Name "Stealth Canteen" 
+
+			Attribute "throwable particle trail only" 
+			Cap 3
+			Increment 1 
+			Cost 25
+
+			///////////////////////////////////////////
+			UIGroup 2
 			AllowedWeapons
 			{
 				Classname "tf_powerup_bottle"
