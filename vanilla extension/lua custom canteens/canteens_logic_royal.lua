@@ -1,6 +1,6 @@
 local canteens = {
 	{
-		-- Name of canteen to display in chat when using
+		-- Name of canteen to display in chat when consumed
 		Display = "SPEED BOOST",
 		-- Any attribute, should be one that has no effect
 		-- Attribute in equivalent extended upgrade should match this
@@ -26,6 +26,7 @@ local canteens = {
 		Description = "Locked to melee for 5 seconds, greatly increased melee power",
 		Effect = function(activator)
 			activator:AddCond(TF_COND_CANNOT_SWITCH_FROM_MELEE, 5, activator)
+			activator:AddCond(TF_COND_SNIPERCHARGE_RAGE_BUFF, 5, activator)
 			activator:WeaponSwitchSlot(LOADOUT_POSITION_MELEE)
 
 			activator:SetAttributeValue("CARD: damage bonus", 1.25)
@@ -37,6 +38,7 @@ local canteens = {
 
 			timer.Simple(5, function()
 				activator:RemoveCond(TF_COND_CANNOT_SWITCH_FROM_MELEE)
+				activator:RemoveCond(TF_COND_SNIPERCHARGE_RAGE_BUFF)
 				activator:SetAttributeValue("CARD: damage bonus", nil)
 				activator:SetAttributeValue("melee attack rate bonus", nil)
 				primary:SetAttributeValue("alt-fire disabled", nil)

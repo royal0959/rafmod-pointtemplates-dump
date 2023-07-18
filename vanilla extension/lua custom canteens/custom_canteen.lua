@@ -111,7 +111,7 @@ function CanteenPurchase(tick, activator)
 	end
 
 	if not purchasedCanteenIndex then
-		print("NO CUSTOM CANTEEN FOUND")
+		util.PrintToChatAll("No custom canteen data found. Make sure upgrade attribute matches canteen lua data")
 		return
 	end
 

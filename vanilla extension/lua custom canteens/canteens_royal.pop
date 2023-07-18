@@ -1,7 +1,7 @@
 WaveSchedule
 {
 	// Load custom canteens logic
-	LuaScriptFile "scripts/canteens_definition_royal.lua"
+	LuaScriptFile "scripts/canteens_logic_royal.lua"
 
 	ExtendedUpgrades
 	{
