@@ -10,14 +10,15 @@ local VANILLA_CANTEEN_CHARGE_ATTRIBUTES = {
 
 local canteenPlayers = {}
 
-local function canteenMessage(activator)
-	local index = activator:GetHandleIndex()
-
-	local canteenName = canteenPlayers[index].CustomCanteenData.Display
+local function canteenMessage(activator, canteenName, playAudio)
 	local team = activator.m_iTeamNum == 2 and "{red}" or "{blue}"
 
 	for _, player in pairs(ents.GetAllPlayers()) do
 		player["$DisplayTextChat"](player, team .. activator:GetPlayerName() .."{reset} has used their {9BBF4D}" .. canteenName .. " {reset}Power Up Canteen!")
+
+		if playAudio then
+			player["$PlaySoundToSelf"](player, "=35|mvm/mvm_used_powerup.wav")
+		end
 	end
 end
 
@@ -85,7 +86,7 @@ function CanteenSpawn(_, activator)
 		-- no chat message will be displayed and no effect will be activated, canteen usage sound effect will still play
 		-- we can fill in with our custom behavior
 
-		canteenMessage(activator)
+		canteenMessage(activator, canteenPlayers[index].CustomCanteenData.Display)
 		canteenPlayers[index].CustomCanteenData.Effect(activator)
 
 		canteen.i_LastCanteenCharges = canteen.m_usNumCharges
@@ -96,6 +97,27 @@ function CanteenSpawn(_, activator)
 			return
 		end
 	end, 0)
+end
+
+-- can be used to let bots use custom canteens with FireInput
+function ForceUseCanteen(canteenName, activator)
+	local canteenIndex
+	for i, canteenData in pairs(CUSTOM_CANTEENS) do
+		if canteenData.Display == canteenName then
+			canteenIndex = i
+			break
+		end
+	end
+
+	if not canteenIndex then
+		util.PrintToChatAll("No custom canteen data found for canteen " .. canteenName)
+		return
+	end
+
+	local canteenData = CUSTOM_CANTEENS[canteenIndex]
+
+	canteenMessage(activator, canteenData.Display, true)
+	canteenData.Effect(activator)
 end
 
 function CanteenPurchase(tick, activator)

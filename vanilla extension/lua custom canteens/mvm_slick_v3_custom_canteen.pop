@@ -58,6 +58,16 @@ WaveSchedule
 				Template T_TFBot_Giant_Heavyweapons
 				tag bot_giant
 				Attributes SuppressFire
+
+				FireInput
+				{
+					Target "popscript"
+					Action "$ForceUseCanteen"
+					Param "SPEED BOOST"
+					Delay 1
+					Cooldown 6
+					Repeats 0
+				}
 			}
 		}
 	}
