@@ -3,7 +3,7 @@
 
 // Load canteens
 #base template_custom_canteen.pop
-#base custom_canteens_royal_template.pop
+#base canteens_royal.pop
 
 WaveSchedule
 {

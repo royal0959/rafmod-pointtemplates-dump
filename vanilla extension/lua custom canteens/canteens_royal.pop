@@ -1,7 +1,7 @@
 WaveSchedule
 {
 	// Load custom canteens logic
-	LuaScriptFile "scripts/custom_canteens_pack_royal.lua"
+	LuaScriptFile "scripts/canteens_definition_royal.lua"
 
 	ExtendedUpgrades
 	{
@@ -13,7 +13,8 @@ WaveSchedule
 			Attribute "mvm completed challenges bitmask" 
 			Cap 3
 			Increment 1 
-			Cost 25
+			Cost 10
+			Description "Gain a speed boost for 5 seconds"
 
 			///////////////////////////////////////////
 			UIGroup 2
@@ -32,14 +33,15 @@ WaveSchedule
 			///////////////////////////////////////////
 		}
 
-		bullet_res_can
+		beserk_can
 		{
-			Name "Bullet Resistance Canteen" 
+			Name "Beserk Canteen" 
 
-			Attribute "throwable fire speed" 
+			Attribute "throwable healing"
 			Cap 3
 			Increment 1 
 			Cost 25
+			Description "Locked to melee for 5 seconds, greatly increased melee power"
 
 			///////////////////////////////////////////
 			UIGroup 2
@@ -57,6 +59,32 @@ WaveSchedule
 			}
 			///////////////////////////////////////////
 		}
+
+		// bullet_res_can
+		// {
+		// 	Name "Bullet Resistance Canteen" 
+
+		// 	Attribute "throwable fire speed" 
+		// 	Cap 3
+		// 	Increment 1 
+		// 	Cost 25
+
+		// 	///////////////////////////////////////////
+		// 	UIGroup 2
+		// 	AllowedWeapons
+		// 	{
+		// 		Classname "tf_powerup_bottle"
+		// 	}
+		// 	OnUpgrade
+		// 	{
+		// 		Output "popscript,$CanteenPurchase,"
+		// 	}
+		// 	OnApply
+		// 	{
+		// 		Output "popscript,$CanteenPurchase,"
+		// 	}
+		// 	///////////////////////////////////////////
+		// }
 
 		reprogram_can
 		{
@@ -65,7 +93,8 @@ WaveSchedule
 			Attribute "throwable damage" 
 			Cap 3
 			Increment 1 
-			Cost 25
+			Cost 100
+			Description "Reprogram nearby non-giant robots to fight for you for 8 seconds"
 
 			///////////////////////////////////////////
 			UIGroup 2
@@ -91,7 +120,8 @@ WaveSchedule
 			Attribute "throwable particle trail only" 
 			Cap 3
 			Increment 1 
-			Cost 25
+			Cost 50
+			Description "Cloak for up to 15 seconds, cloak is cancelled when attacking"
 
 			///////////////////////////////////////////
 			UIGroup 2
