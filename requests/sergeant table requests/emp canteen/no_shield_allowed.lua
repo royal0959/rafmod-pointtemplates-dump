@@ -16,6 +16,10 @@ local function removeCanteenBotCallbacks()
 end
 
 local function noShieldCanteen(bot)
+	if shieldCanteenBot then
+		removeCanteenBotCallbacks()
+	end
+
 	shieldCanteenBot = bot
 
 	shieldCanteenBotCallbacks[1] = bot:AddCallback(ON_DEATH, function()
@@ -30,7 +34,7 @@ end
 
 function OnWaveSpawnBot(bot, _, tags)
 	for _, tag in pairs(tags) do
-		if tag == "EMP_TAG" then
+		if tag == EMP_TAG then
 			noShieldCanteen(bot)
 			break
 		end
