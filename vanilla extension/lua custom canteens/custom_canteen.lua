@@ -103,7 +103,7 @@ end
 function ForceUseCanteen(canteenName, activator)
 	local canteenIndex
 	for i, canteenData in pairs(CUSTOM_CANTEENS) do
-		if canteenData.Display == canteenName then
+		if (canteenData.Display):lower() == canteenName:lower() then
 			canteenIndex = i
 			break
 		end
