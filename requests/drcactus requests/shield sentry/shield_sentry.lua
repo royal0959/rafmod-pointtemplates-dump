@@ -1,3 +1,5 @@
+local DESPAWN_TIME_CONTROL_ATTRIBUTE = "throwable damage"
+
 local SHIELD_OFFSET = 100
 
 local SHIELD_DAMAGE_ABSORB_MULT = 0.8
@@ -33,6 +35,11 @@ local function UpdateSentryShield(shield, building, owner)
 end
 
 local function SetupPSGSentry(building, owner)
+	local melee = owner:GetPlayerItemBySlot(LOADOUT_POSITION_MELEE)
+	local despawnTime = melee:GetAttributeValue(DESPAWN_TIME_CONTROL_ATTRIBUTE) or 8
+
+	local despawnTimestamp = CurTime() + despawnTime
+
 	if building.m_bDisposableBuilding ~= 0 then
 		building["$attributeoverride"] = 1
 	end
@@ -43,7 +50,6 @@ local function SetupPSGSentry(building, owner)
 	})
 
 	UpdateSentryShield(shield, building, owner)
-	-- shield:SetParent(building)
 
 	building:AddCallback(ON_REMOVE, function()
 		shield:Remove()
@@ -78,14 +84,49 @@ local function SetupPSGSentry(building, owner)
 		building:TakeDamage(damageinfo)
 	end)
 
+	local despawnTimerText
+
+	building:AddCallback(ON_REMOVE, function()
+		if despawnTimerText then
+			despawnTimerText:Remove()
+			despawnTimerText = nil
+		end
+	end)
+
+	local function newTimerText()
+		if despawnTimerText then
+			despawnTimerText:Remove()
+			despawnTimerText = nil
+		end
+
+		if building.m_bCarried == 1 then
+			return
+		end
+
+		despawnTimerText = ents.CreateWithKeys("point_worldtext", {
+			message = tostring(math.floor(despawnTimestamp - CurTime())),
+			textsize = 30,
+			orientation = 1,
+			color = "255 255 255",
+		}, true, true)
+		despawnTimerText:SetAbsOrigin(building:GetAbsOrigin() + Vector(0, 0, 80))
+	end
+
 	local updateLoop
 	updateLoop = timer.Create(0.1, function ()
 		if not IsValid(building) then
 			timer.Stop(updateLoop)
 			return
 		end
+		newTimerText()
 		UpdateSentryShield(shield, building, owner)
 	end, 0)
+
+
+	timer.Create(despawnTime, function()
+		timer.Stop(updateLoop)
+		building:RemoveHealth(10000)
+	end)
 end
 
 function OnPSGSentrySpawn(building)

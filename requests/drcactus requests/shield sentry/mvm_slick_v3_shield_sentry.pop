@@ -29,6 +29,7 @@ WaveSchedule
 
 			SecondaryAttributes
 			{
+				"throwable damage" 8 // controls despawn time
 				// 0.5 firerate
 				"engy sentry fire rate increased" 2
 				"mult firerocket rate" 0.5
