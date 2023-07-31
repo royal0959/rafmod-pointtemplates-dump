@@ -10,13 +10,15 @@ local function getRandomBluSpawn()
 	return bluSpawns[math.random(#bluSpawns)]
 end
 
-table.insert(CUSTOM_CANTEENS, {
-	Display = "RECALL",
-	Attribute = "throwable particle trail only",
-	Description = "test",
-	Effect = function(activator)
-		local chosenSpawn = getRandomBluSpawn()
-		print(chosenSpawn)
-		activator:SetAbsOrigin(chosenSpawn:GetAbsOrigin())
-	end
-})
+timer.Simple(0.1, function()
+	table.insert(CUSTOM_CANTEENS, {
+		Display = "RECALL",
+		Attribute = "throwable particle trail only",
+		Description = "test",
+		Effect = function(activator)
+			local chosenSpawn = getRandomBluSpawn()
+			print(chosenSpawn)
+			activator:SetAbsOrigin(chosenSpawn:GetAbsOrigin())
+		end
+	})
+end)

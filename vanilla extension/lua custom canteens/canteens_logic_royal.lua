@@ -86,6 +86,8 @@ local canteens = {
 	},
 }
 
-for _, canteen in pairs(canteens) do
-	table.insert(CUSTOM_CANTEENS, canteen)
-end
+timer.Simple(0.1, function()
+	for _, canteen in pairs(canteens) do
+		table.insert(CUSTOM_CANTEENS, canteen)
+	end
+end)
