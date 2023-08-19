@@ -77,7 +77,7 @@ function CreateShockwave(_, activator)
 		-- Damage
 		local damagedPlayers = {}
 		shield:AddCallback(ON_TOUCH, function(_, target, hitPosition)
-			if target:IsPlayer() and not damagedPlayers[target:GetHandleIndex()] then
+			if target:IsPlayer() and not damagedPlayers[target:GetHandleIndex()] and target.m_iTeamNum ~= activator.m_iTeamNum then
 				damagedPlayers[target:GetHandleIndex()] = true
 
 				local visualHitPosition = hitPosition + Vector(0, 0, 50)
