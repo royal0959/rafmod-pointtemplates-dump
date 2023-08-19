@@ -5,6 +5,8 @@ local SHIELD_OFFSET = 100
 local SHIELD_DAMAGE_ABSORB_MULT = 0.8
 local SHIELD_DAMAGE_AMMO_REDUCTION_MULT = 0.5
 
+local DESPAWN_TIME_INCREASE_PER_HEALTH_TICK = 3
+
 local function DisableShield(shield)
 	shield:SetModel("models/empty.mdl")
 end
@@ -37,6 +39,11 @@ end
 local function SetupPSGSentry(building, owner)
 	local melee = owner:GetPlayerItemBySlot(LOADOUT_POSITION_MELEE)
 	local despawnTime = melee:GetAttributeValue(DESPAWN_TIME_CONTROL_ATTRIBUTE) or 8
+
+	local pda = owner:GetPlayerItemBySlot(LOADOUT_POSITION_PDA)
+	local healthUpgradeTicks = pda:GetAttributeValue("engy building health bonus") or 1
+
+	despawnTime = despawnTime + (DESPAWN_TIME_INCREASE_PER_HEALTH_TICK * (healthUpgradeTicks - 1))
 
 	local despawnTimestamp = CurTime() + despawnTime
 
@@ -115,7 +122,11 @@ local function SetupPSGSentry(building, owner)
 	local updateLoop
 	updateLoop = timer.Create(0.1, function ()
 		if not IsValid(building) then
-			timer.Stop(updateLoop)
+			if updateLoop then
+				timer.Stop(updateLoop)
+				updateLoop = nil
+			end
+
 			return
 		end
 		newTimerText()
@@ -124,7 +135,11 @@ local function SetupPSGSentry(building, owner)
 
 
 	timer.Create(despawnTime, function()
-		timer.Stop(updateLoop)
+		if updateLoop then
+			timer.Stop(updateLoop)
+			updateLoop = nil
+		end
+
 		building:RemoveHealth(10000)
 	end)
 end
