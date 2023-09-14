@@ -658,7 +658,7 @@ function SentrySpawned(_, building)
 			end
 
 			for _, cond in pairs(REPLICATE_CONDS) do
-				if owner:InCond(cond) ~= 0 then
+				if owner:InCond(cond) then
 					botSpawn:AddCond(cond, 0.25, owner)
 				end
 			end
