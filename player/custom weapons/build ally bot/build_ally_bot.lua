@@ -658,6 +658,10 @@ function SentrySpawned(_, building)
 			if not owner:IsAlive() then
 				return
 			end
+			
+			if owner:InCond(TF_COND_TAUNTING) then
+				botSpawn["$Taunt"](botSpawn)
+			end
 
 			for _, cond in pairs(REPLICATE_CONDS) do
 				if owner:InCond(cond) then
