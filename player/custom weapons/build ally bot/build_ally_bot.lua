@@ -181,7 +181,8 @@ local function removeCashSafe(pack)
 	-- print("price: "..tostring(packPrice))
 	local mvmStats = ents.FindByClass("tf_mann_vs_machine_stats")
 
-	local vscript = "NetProps.SetPropInt(activator, \"%s.nCreditsDropped\", NetProps.GetPropInt(activator, \"%s.nCreditsDropped\") - %s)"
+	local vscript =
+		'NetProps.SetPropInt(activator, "%s.nCreditsDropped", NetProps.GetPropInt(activator, "%s.nCreditsDropped") - %s)'
 	local curWave = "m_currentWaveStats"
 	mvmStats:RunScriptCode(vscript:format(curWave, curWave, packPrice), mvmStats, mvmStats)
 end
@@ -236,7 +237,6 @@ function OnWaveStart()
 		bot:SetAttributeValue("damage bonus HIDDEN", nil)
 	end
 end
-
 
 local function checkOnHit(parent, damageinfo)
 	local attacker = damageinfo.Attacker
@@ -309,15 +309,17 @@ end
 local function getCursorPos(player, bot)
 	local eyeAngles = getEyeAngles(player)
 
+	util.StartLagCompensation(player)
 	local DefaultTraceInfo = {
 		start = player,
-		distance = 1000,
+		distance = 100000,
 		angles = eyeAngles,
-		mask = MASK_SOLID,
-		collisiongroup = TFCOLLISION_GROUP_ROCKETS, --COLLISION_GROUP_DEBRIS,
-		filter = { player, bot }
+		mask = MASK_SHOT,
+		collisiongroup = COLLISION_GROUP_PLAYER, --COLLISION_GROUP_DEBRIS,
+		filter = { player, bot },
 	}
 	local trace = util.Trace(DefaultTraceInfo)
+	util.FinishLagCompensation(player)
 	return trace.HitPos
 end
 
@@ -667,7 +669,10 @@ function SentrySpawned(_, building)
 			local ownerFireRateUpgrade = pda:GetAttributeValue("engy sentry fire rate increased")
 
 			if ownerFireRateUpgrade then
-				botSpawn:SetAttributeValue(SENTRY_FIRERATE_REPLICATE_ATTR, ownerFireRateUpgrade * SENTRY_FIRERATE_REPLICATE_MULT)
+				botSpawn:SetAttributeValue(
+					SENTRY_FIRERATE_REPLICATE_ATTR,
+					ownerFireRateUpgrade * SENTRY_FIRERATE_REPLICATE_MULT
+				)
 			else
 				botSpawn:SetAttributeValue(SENTRY_FIRERATE_REPLICATE_ATTR, nil)
 			end
@@ -677,7 +682,7 @@ function SentrySpawned(_, building)
 			if botWeaponClip then
 				local clipBonusMult = botSpawn:GetAttributeValueByClass("mult_clipsize", 1)
 				local clipBonusAtomic = botSpawn:GetAttributeValueByClass("mult_clipsize_upgrade_atomic", 0)
-		
+
 				local maxClip = (4 * clipBonusMult) + clipBonusAtomic -- TODO: make this account for different classes other than soldier
 				local clipCalcMult = 150 / maxClip
 				-- m_iAmmoShells max is 150
@@ -687,10 +692,10 @@ function SentrySpawned(_, building)
 			if owner.m_hActiveWeapon.m_iClassname == "tf_weapon_laser_pointer" then
 				-- wrangle behavior:
 				-- if attack is held: fire weapon
-				-- if alt fire is held: move toward cursor
+				-- if alt fire is held: move toward cursor while attacking independently
 
 				if not lastWrangled then
-					botSpawn:BotCommand("stop interrupt action")
+					-- botSpawn:BotCommand("stop interrupt action")
 
 					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
 					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
@@ -713,20 +718,21 @@ function SentrySpawned(_, building)
 					botSpawn:RunScriptCode(BOT_ATTACK_VSCRIPT, botSpawn)
 				end
 
-				local stringStart = ("interrupt_action -lookpos %s %s %s -alwayslook"):format(
-					cursorPos[1],
-					cursorPos[2],
-					cursorPos[3]
-				)
-
 				if altFireHeld then
-					stringStart = stringStart
-						.. (" -pos %s %s %s -distance 1"):format(cursorPos[1], cursorPos[2], cursorPos[3])
+					local interruptAction = ("interrupt_action -pos %s %s %s -distance 1 -duration 0.1"):format(
+						cursorPos[1],
+						cursorPos[2],
+						cursorPos[3]
+					)
+
+					botSpawn:BotCommand(interruptAction)
+
+					-- allow bot to attack when alt fire is held
+					botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
+				else
+					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
 				end
 
-				local interruptAction = ("%s -duration 0.1"):format(stringStart)
-
-				botSpawn:BotCommand(interruptAction)
 				return
 			end
 
@@ -735,9 +741,9 @@ function SentrySpawned(_, building)
 					botSpawn:SetAttributeValue(name, nil)
 				end
 
-				botSpawn:BotCommand("stop interrupt action")
+				-- botSpawn:BotCommand("stop interrupt action")
 
-				botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
+				-- botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
 				botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
 
 				lastWrangled = false
@@ -745,7 +751,7 @@ function SentrySpawned(_, building)
 
 			local pos = owner:GetAbsOrigin()
 
-			local stringStart = "interrupt_action"
+			local stringStart = "interrupt_action -switch_action Default"
 
 			-- don't move if already close
 			if pos:Distance(botSpawn:GetAbsOrigin()) <= 150 then
@@ -756,6 +762,45 @@ function SentrySpawned(_, building)
 			local interruptAction = ("%s -pos %s %s %s -duration 0.1"):format(stringStart, pos[1], pos[2], pos[3])
 
 			botSpawn:BotCommand(interruptAction)
+		end, 0)
+
+		local wranglerLogic
+		wranglerLogic = timer.Create(0, function()
+			if not activeBuiltBots[handle] then
+				timer.Stop(wranglerLogic)
+				return
+			end
+
+			if owner.m_hActiveWeapon.m_iClassname == "tf_weapon_laser_pointer" then
+				-- wrangle behavior:
+				-- if attack is held: fire weapon
+				-- if alt fire is held: move toward cursor while attacking independently
+				local altFireHeld = owner.m_nButtons & IN_ATTACK2 ~= 0
+
+				cursorPos = getCursorPos(owner, botSpawn)
+
+				if not altFireHeld then
+					-- local interruptAction = ("interrupt_action -lookpos %s %s %s -alwayslook -duration 0.14"):format(
+					-- 	cursorPos[1],
+					-- 	cursorPos[2],
+					-- 	cursorPos[3]
+					-- )
+
+					-- botSpawn:BotCommand(interruptAction)
+
+					-- thanks mince
+					local targetAngles = (cursorPos - (botSpawn:GetAbsOrigin() + Vector(
+						0,
+						0,
+						botSpawn["m_vecViewOffset[2]"]
+					))):ToAngles()
+					targetAngles = Vector(targetAngles[1], targetAngles[2], 0)
+
+					botSpawn:SnapEyeAngles(targetAngles)
+				end
+
+				return
+			end
 		end, 0)
 	end)
 end
