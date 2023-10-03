@@ -15,6 +15,19 @@ local function getEyeAngles(player)
 	return Vector(pitch, yaw, 0)
 end
 
+-- might cause a client side memory leak because the laser isn't cleared when the laser entity itself is
+-- who knows!
+-- this is a bandaid to forcefully hide the lasers out of sight (and out of mind. don't think about it)
+local function hideLaser(laser, pointer)
+	if not IsValid(laser) then
+		return
+	end
+
+	laser:Stop()
+
+	laser:SetAbsOrigin(pointer:GetAbsOrigin())
+end
+
 function LaserOnAim(_, activator)
 	local laser = ents.CreateWithKeys("info_particle_system", {
 		effect_name = "laser_sight_beam",
@@ -22,38 +35,28 @@ function LaserOnAim(_, activator)
 		flag_as_weather = 0,
 	}, false)
 
-	laser:SetName("le_laser")
+	laser:SetName("le_laser" .. tostring(activator:GetHandleIndex()))
 
-	local pointer = Entity("info_particle_system", true)
-	local color = Entity("info_particle_system", true)
+	local pointer = Entity("info_particle_system")
+	local color = Entity("info_particle_system")
 
-	pointer:SetName("le_laserpointer")
-	color:SetName("le_lasercolor")
+	pointer:SetName("le_laserpointer" .. tostring(activator:GetHandleIndex()))
+	color:SetName("le_lasercolor" .. tostring(activator:GetHandleIndex()))
 
 	color:SetAbsOrigin(Vector(255, 0, 0))
 
 	laser.m_hControlPointEnts[1] = pointer
 	laser.m_hControlPointEnts[2] = color
 
+	for _, e in pairs({ laser, pointer, color }) do
+		e["$SetOwner"](e, activator)
+	end
+
 	local callbacks = {}
 
 	local started = false
 
 	local check
-
-	-- might cause a client side memory leak because the laser isn't cleared when the laser entity itself is
-	-- who knows!
-	-- this is a bandaid to forcefully hide the lasers out of sight (and out of mind. don't think about it)
-	local function hideLaser()
-		if not IsValid(laser) then
-			-- print("nah")
-			return
-		end
-
-		laser:Stop()
-
-		laser:SetAbsOrigin(pointer:GetAbsOrigin())
-	end
 
 	local terminated = false
 
@@ -67,7 +70,7 @@ function LaserOnAim(_, activator)
 		timer.Stop(check)
 		removeCallbacks(activator, callbacks)
 
-		hideLaser()
+		hideLaser(laser, pointer)
 
 		timer.Simple(0.1, function()
 			for _, e in pairs({ laser, pointer, color }) do
@@ -91,7 +94,7 @@ function LaserOnAim(_, activator)
 
 		if activator:InCond(0) ~= 1 then
 			if started then
-				hideLaser()
+				hideLaser(laser, pointer)
 
 				started = false
 			end
@@ -128,3 +131,17 @@ function LaserOnAim(_, activator)
 		terminate()
 	end)
 end
+
+AddEventCallback("mvm_reset_stats", function ()
+	print("!!!RESTART!!!")
+
+	PrintTable(ents.FindAllByName("le_laser*"))
+	for _, laser in pairs(ents.FindAllByName("le_laser*")) do
+		local ownerId = tostring(string.match(laser, "%d+"))
+
+		local pointer = ents.FindByName("le_laserpointer" .. ownerId)
+
+		print(ownerId, pointer)
+		hideLaser(laser, pointer)
+	end
+end)
