@@ -323,6 +323,13 @@ local function getCursorPos(player, bot)
 	return trace.HitPos
 end
 
+local function getMaxClip(bot)
+	local clipBonusMult = bot:GetAttributeValueByClass("mult_clipsize", 1)
+	local clipBonusAtomic = bot:GetAttributeValueByClass("mult_clipsize_upgrade_atomic", 0)
+
+	return (4 * clipBonusMult) + clipBonusAtomic -- TODO: make this account for different classes other than soldier
+end
+
 local function applyName(bot, name, owner)
 	local displayName = name .. " (" .. owner.m_szNetname .. ")"
 	bot.m_szNetname = displayName
@@ -658,7 +665,7 @@ function SentrySpawned(_, building)
 			if not owner:IsAlive() then
 				return
 			end
-			
+
 			if owner:InCond(TF_COND_TAUNTING) then
 				botSpawn["$Taunt"](botSpawn)
 			end
@@ -684,10 +691,7 @@ function SentrySpawned(_, building)
 			local botWeapon = botSpawn.m_hActiveWeapon
 			local botWeaponClip = botWeapon.m_iClip1
 			if botWeaponClip then
-				local clipBonusMult = botSpawn:GetAttributeValueByClass("mult_clipsize", 1)
-				local clipBonusAtomic = botSpawn:GetAttributeValueByClass("mult_clipsize_upgrade_atomic", 0)
-
-				local maxClip = (4 * clipBonusMult) + clipBonusAtomic -- TODO: make this account for different classes other than soldier
+				local maxClip = getMaxClip(botSpawn)
 				local clipCalcMult = 150 / maxClip
 				-- m_iAmmoShells max is 150
 				newBuilding.m_iAmmoShells = botWeaponClip * clipCalcMult
@@ -808,3 +812,27 @@ function SentrySpawned(_, building)
 		end, 0)
 	end)
 end
+
+AddEventCallback("player_used_powerup_bottle", function(eventTable)
+	local netId = eventTable.player
+	local canteenType = eventTable.type
+
+	local AMMO_CANTEEN = 4
+
+	local player = ents.GetAllPlayers()[netId]
+	local bot = activeBuiltBots[player:GetHandleIndex()]
+
+	if not bot then
+		return
+	end
+
+	if canteenType == AMMO_CANTEEN then
+		local botWeapon = bot.m_hActiveWeapon
+		local botWeaponClip = botWeapon.m_iClip1
+		if botWeaponClip then
+			local maxClip = getMaxClip(bot)
+
+			botWeapon.m_iClip1 = maxClip
+		end
+	end
+end)
