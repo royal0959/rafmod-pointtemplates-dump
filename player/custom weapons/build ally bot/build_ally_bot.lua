@@ -143,11 +143,13 @@ local SENTRY_FIRERATE_REPLICATE_MULT = 1
 
 -- we can't expect lua to do all the work - joshua graham
 -- local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(0.1)"
-local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000)"
+-- 16 -- disable dodge
+local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000); activator.AddBotAttribute(16)"
 local BOT_DISABLE_VISION_VSCRIPT = "activator.SetDifficulty(0); activator.SetMaxVisionRangeOverride(0.1)"
 local BOT_ENABLE_VISION_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000)"
 local BOT_SET_WEPRESTRICTION_VSCRIPT = "activator.AddWeaponRestriction(%s)"
 local BOT_CLEAR_RESTRICTIONS_VSCRIPT = "activator.ClearAllWeaponRestrictions()"
+
 -- local BOT_CLEAR_FOCUS = "activator.ClearAttentionFocus()"
 
 local BOT_ATTACK_VSCRIPT = "activator.PressFireButton(0.1)"
