@@ -118,6 +118,8 @@ local BOTS_VARIANTS = {
 	},
 }
 
+local SPEED_BOOST_DISTANCE = 400 -- apply speed boost to bot when it's far away from owner
+
 local BOTS_ATTRIBUTES = {
 	-- ["not solid to players"] = 1, -- prevents bot from taking teleporter
 	["collect currency on kill"] = 1,
@@ -714,6 +716,7 @@ function SentrySpawned(_, building)
 				end
 			end
 
+
 			local pda = owner:GetPlayerItemBySlot(LOADOUT_POSITION_PDA)
 			local ownerFireRateUpgrade = pda:GetAttributeValue("engy sentry fire rate increased")
 
@@ -796,11 +799,16 @@ function SentrySpawned(_, building)
 			end
 
 			local pos = owner:GetAbsOrigin()
+			local distance = pos:Distance(botSpawn:GetAbsOrigin())
+
+			if distance >= SPEED_BOOST_DISTANCE then
+				botSpawn:AddCond(TF_COND_SPEED_BOOST, 1)
+			end
 
 			local stringStart = "interrupt_action -switch_action Default"
 
 			-- don't move if already close
-			if pos:Distance(botSpawn:GetAbsOrigin()) <= 150 then
+			if distance <= 150 then
 				botSpawn:BotCommand(stringStart .. " -duration 0.1")
 				return
 			end
