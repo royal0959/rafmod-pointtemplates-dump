@@ -273,7 +273,7 @@ end)
 
 -- convert damage dealt by bots to owner
 -- and nullify damage taken by built bot during prewave
-local function addGlobalDamageCallback(player)
+local function addGlobalCallbacks(player)
 	player:AddCallback(ON_DAMAGE_RECEIVED_PRE, function(_, damageinfo)
 		local isBot = activeBots[player:GetHandleIndex()]
 		if isBot and not inWave then
@@ -286,10 +286,33 @@ local function addGlobalDamageCallback(player)
 
 		return checkOnHit(player, damageinfo)
 	end)
+
+	-- failsafe for spawning bot in setup
+	player:AddCallback(ON_SPAWN, function()
+		if player:IsRealPlayer() then
+			return
+		end
+
+		timer.Simple(0.1, function()
+			if inWave then
+				return
+			end
+
+			local owner = activeBuiltBots[player:GetHandleIndex()]
+
+			if not owner then
+				return
+			end
+
+			if player.m_iTeamNum == owner.m_iTeamNum then
+				player:Suicide()
+			end
+		end)
+	end)
 end
 
 function OnPlayerConnected(player)
-	addGlobalDamageCallback(player)
+	addGlobalCallbacks(player)
 end
 
 local function removeCallbacks(player, callbacks)
