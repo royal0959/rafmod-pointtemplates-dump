@@ -119,7 +119,7 @@ local BOTS_VARIANTS = {
 }
 
 local BOTS_ATTRIBUTES = {
-	["not solid to players"] = 1,
+	-- ["not solid to players"] = 1, -- prevents bot from taking teleporter
 	["collect currency on kill"] = 1,
 	["ammo regen"] = 10,
 }
@@ -232,6 +232,7 @@ function OnWaveStart()
 		bot:ResetFakeSendProp("m_iTeamNum")
 		bot.m_iTeamNum = 2
 		-- bot:RemoveCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
+		bot:SetAttributeValue("not solid to players", nil)
 		bot:SetAttributeValue("ignored by enemy sentries", nil)
 		bot:SetAttributeValue("ignored by bots", nil)
 		bot:SetAttributeValue("damage bonus HIDDEN", nil)
@@ -476,6 +477,17 @@ local function setupBot(bot, owner, handle, building)
 	lingeringBuiltBots[botHandle] = true
 	activeBuiltBotsOwner[botHandle] = owner
 
+	-- callbacks.shouldCollide = bot:AddCallback(ON_SHOULD_COLLIDE, function(other, cause)
+	-- 	if cause == ON_SHOULD_COLLIDE_CAUSE_FIRE_WEAPON then
+	-- 		return
+	-- 	end
+
+	-- 	if not other:IsPlayer() then
+	-- 		return
+	-- 	end
+
+	-- 	return false
+	-- end)
 	callbacks.damaged = bot:AddCallback(ON_DAMAGE_RECEIVED_POST, function()
 		building.m_iHealth = bot.m_iHealth
 	end)
@@ -624,6 +636,7 @@ function SentrySpawned(_, building)
 			botSpawn:SetFakeSendProp("m_iTeamNum", 2)
 			botSpawn.m_iTeamNum = 1
 			-- botSpawn:AddCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
+			botSpawn:SetAttributeValue("not solid to players", 1)
 			botSpawn:SetAttributeValue("ignored by enemy sentries", 1)
 			botSpawn:SetAttributeValue("ignored by bots", 1)
 			botSpawn:SetAttributeValue("damage bonus HIDDEN", 0.0001)
