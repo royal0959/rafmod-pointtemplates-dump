@@ -587,6 +587,52 @@ function TierPurchase(tier, activator)
 	applyBotTier(activator, bot, "soldier", tier)
 end
 
+local function startBotConstruction(owner, building, bot)
+	if not inWave then
+		building.m_iHealth = building.m_iMaxHealth
+		return
+	end
+
+	building.m_bBuilding = 1
+	bot.m_iHealth = 1
+
+	local botTier = getCurBotTier(owner) or 1
+	local healthIncrement = 1
+
+	if botTier >= 5 then
+		healthIncrement = 3
+	end
+
+	bot:AddCond(TF_COND_MVM_BOT_STUN_RADIOWAVE, 50000)
+
+	local constructionTimer
+	constructionTimer = timer.Create(0, function()
+		if not IsValid(building) then
+			timer.Stop(constructionTimer)
+			return
+		end
+
+		building.m_bBuilding = 1
+
+		bot.m_iHealth = bot.m_iHealth + healthIncrement
+
+		building.m_iHealth = bot.m_iHealth
+
+		local percent = building.m_iHealth / building.m_iMaxHealth
+		building.m_flPercentageConstructed = percent
+
+		building.m_bBuilding = 1
+
+		if percent >= 1 then
+			timer.Stop(constructionTimer)
+			bot:RemoveCond(TF_COND_MVM_BOT_STUN_RADIOWAVE)
+			bot:RemoveCond(TF_COND_STUNNED)
+			building.m_bBuilding = 0
+			return
+		end
+	end, 0)
+end
+
 function SentrySpawned(_, building)
 	if not IsValid(building) then
 		print("building was destroyed before logic could register lol")
@@ -603,6 +649,8 @@ function SentrySpawned(_, building)
 		team = owner.m_iTeamNum,
 		SolidToPlayer = 0,
 	}, true)
+
+	newBuilding.m_bBuilding = 1
 
 	building:Remove()
 	newBuilding:SetBuilder(owner, owner, owner)
@@ -650,7 +698,8 @@ function SentrySpawned(_, building)
 
 		-- set max health
 		newBuilding.m_iMaxHealth = botSpawn.m_iHealth
-		newBuilding.m_iHealth = botSpawn.m_iHealth
+
+		startBotConstruction(owner, newBuilding, botSpawn)
 
 		newBuilding:AddCallback(ON_REMOVE, function()
 			if not activeBuiltBots[handle] then
@@ -746,12 +795,12 @@ function SentrySpawned(_, building)
 				if not lastWrangled then
 					-- botSpawn:BotCommand("stop interrupt action")
 
-					-- botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
-					-- botSpawn:AddCond(TF_COND_ENERGY_BUFF)
+					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
+					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
 
-					-- for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
-					-- 	botSpawn:SetAttributeValue(name, value)
-					-- end
+					for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+						botSpawn:SetAttributeValue(name, value)
+					end
 
 					lastWrangled = true
 				end
@@ -779,34 +828,34 @@ function SentrySpawned(_, building)
 					-- allow bot to attack when alt fire is held
 					botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
 
-					botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
-					for name, _ in pairs(BOTS_WRANGLED_ATTRIBUTES) do
-						botSpawn:SetAttributeValue(name, nil)
-					end
+					-- botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
+					-- for name, _ in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+					-- 	botSpawn:SetAttributeValue(name, nil)
+					-- end
 				else
 					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
 
-					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
-					for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
-						botSpawn:SetAttributeValue(name, value)
-					end
+					-- botSpawn:AddCond(TF_COND_ENERGY_BUFF)
+					-- for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+					-- 	botSpawn:SetAttributeValue(name, value)
+					-- end
 				end
 
 				return
 			end
 
-			-- if lastWrangled then
-			-- 	for name, _ in pairs(BOTS_WRANGLED_ATTRIBUTES) do
-			-- 		botSpawn:SetAttributeValue(name, nil)
-			-- 	end
+			if lastWrangled then
+				for name, _ in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+					botSpawn:SetAttributeValue(name, nil)
+				end
 
-			-- 	-- botSpawn:BotCommand("stop interrupt action")
+				-- botSpawn:BotCommand("stop interrupt action")
 
-			-- 	-- botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
-			-- 	botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
+				botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
+				botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
 
-			-- 	lastWrangled = false
-			-- end
+				lastWrangled = false
+			end
 
 			local pos = owner:GetAbsOrigin()
 			local distance = pos:Distance(botSpawn:GetAbsOrigin())
@@ -832,6 +881,10 @@ function SentrySpawned(_, building)
 		wranglerLogic = timer.Create(0, function()
 			if not activeBuiltBots[handle] then
 				timer.Stop(wranglerLogic)
+				return
+			end
+
+			if not owner.m_hActiveWeapon then
 				return
 			end
 
