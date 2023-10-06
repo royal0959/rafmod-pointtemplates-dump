@@ -146,7 +146,8 @@ local SENTRY_FIRERATE_REPLICATE_MULT = 1
 -- we can't expect lua to do all the work - joshua graham
 -- local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(0.1)"
 -- 16 -- disable dodge
-local BOT_SETUP_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000); activator.AddBotAttribute(16)"
+local BOT_SETUP_VSCRIPT =
+	"activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000); activator.AddBotAttribute(16)"
 local BOT_DISABLE_VISION_VSCRIPT = "activator.SetDifficulty(0); activator.SetMaxVisionRangeOverride(0.1)"
 local BOT_ENABLE_VISION_VSCRIPT = "activator.SetDifficulty(3); activator.SetMaxVisionRangeOverride(100000)"
 local BOT_SET_WEPRESTRICTION_VSCRIPT = "activator.AddWeaponRestriction(%s)"
@@ -716,7 +717,6 @@ function SentrySpawned(_, building)
 				end
 			end
 
-
 			local pda = owner:GetPlayerItemBySlot(LOADOUT_POSITION_PDA)
 			local ownerFireRateUpgrade = pda:GetAttributeValue("engy sentry fire rate increased")
 
@@ -746,12 +746,12 @@ function SentrySpawned(_, building)
 				if not lastWrangled then
 					-- botSpawn:BotCommand("stop interrupt action")
 
-					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
-					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
+					-- botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
+					-- botSpawn:AddCond(TF_COND_ENERGY_BUFF)
 
-					for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
-						botSpawn:SetAttributeValue(name, value)
-					end
+					-- for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+					-- 	botSpawn:SetAttributeValue(name, value)
+					-- end
 
 					lastWrangled = true
 				end
@@ -778,25 +778,35 @@ function SentrySpawned(_, building)
 
 					-- allow bot to attack when alt fire is held
 					botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
+
+					botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
+					for name, _ in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+						botSpawn:SetAttributeValue(name, nil)
+					end
 				else
 					botSpawn:RunScriptCode(BOT_DISABLE_VISION_VSCRIPT, botSpawn)
+
+					botSpawn:AddCond(TF_COND_ENERGY_BUFF)
+					for name, value in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+						botSpawn:SetAttributeValue(name, value)
+					end
 				end
 
 				return
 			end
 
-			if lastWrangled then
-				for name, _ in pairs(BOTS_WRANGLED_ATTRIBUTES) do
-					botSpawn:SetAttributeValue(name, nil)
-				end
+			-- if lastWrangled then
+			-- 	for name, _ in pairs(BOTS_WRANGLED_ATTRIBUTES) do
+			-- 		botSpawn:SetAttributeValue(name, nil)
+			-- 	end
 
-				-- botSpawn:BotCommand("stop interrupt action")
+			-- 	-- botSpawn:BotCommand("stop interrupt action")
 
-				-- botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
-				botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
+			-- 	-- botSpawn:RunScriptCode(BOT_ENABLE_VISION_VSCRIPT, botSpawn)
+			-- 	botSpawn:RemoveCond(TF_COND_ENERGY_BUFF)
 
-				lastWrangled = false
-			end
+			-- 	lastWrangled = false
+			-- end
 
 			local pos = owner:GetAbsOrigin()
 			local distance = pos:Distance(botSpawn:GetAbsOrigin())
@@ -881,4 +891,45 @@ AddEventCallback("player_used_powerup_bottle", function(eventTable)
 			botWeapon.m_iClip1 = maxClip
 		end
 	end
+end)
+
+AddEventCallback("player_death", function(eventTable)
+	local attacker = eventTable.attacker
+	local player = ents.GetPlayerByUserId(attacker)
+
+	local attackerBot = activeBuiltBots[player:GetHandleIndex()]
+
+	if not attackerBot then
+		return
+	end
+
+	local isBotKill = false
+
+	local inflictor = Entity(eventTable.inflictor_entindex)
+
+	if inflictor == attackerBot.m_hActiveWeapon then
+		-- weapon
+		isBotKill = true
+	elseif inflictor.m_hLauncher then
+		-- projectile
+		local weaponOwner = inflictor.m_hLauncher.m_hOwnerEntity
+		if weaponOwner == attackerBot then
+			isBotKill = true
+		end
+	end
+
+	if not isBotKill then
+		return
+	end
+
+	local victim = Entity(eventTable.victim_entindex)
+
+	local killAddition = 1
+
+	if victim.m_bIsMiniBoss ~= 0 then
+		killAddition = 5
+	end
+
+	local sentry = Entity(tonumber(player.BuiltBotSentry))
+	sentry.m_iKills = sentry.m_iKills + killAddition
 end)

@@ -177,4 +177,55 @@ WaveSchedule
 			}
 		}
 	}
+
+	Wave // Wave 4
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 5
+			SpawnCount 5
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 500
+		
+			TFBot
+			{
+				Template T_TFBot_Giant_Heavyweapons
+				Attributes SuppressFire
+				Health 1
+			}
+		}
+		WaveSpawn
+		{
+			Name "1"
+			Where spawnbot
+			TotalCount 50
+			MaxActive 5
+			SpawnCount 5
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+			TotalCurrency 500
+		
+			TFBot
+			{
+				Class Heavy
+				Attributes SuppressFire
+				Health 1
+			}
+		}
+	}
 }
