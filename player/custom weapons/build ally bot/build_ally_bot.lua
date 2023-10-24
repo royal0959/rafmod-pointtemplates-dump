@@ -68,6 +68,8 @@ local BOTS_VARIANTS = {
 				Conds = { 37 },
 				HealthIncrease = 1800,
 
+				MiniBoss = true,
+
 				Attributes = {
 					["damage bonus"] = 1.5,
 					["faster reload rate"] = 0.5,
@@ -90,6 +92,8 @@ local BOTS_VARIANTS = {
 				HealthIncrease = 3800,
 
 				Items = { "Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Tyrant's Helm" },
+
+				MiniBoss = true,
 
 				Attributes = {
 					["damage bonus"] = 2,
@@ -388,6 +392,12 @@ local function applyUniversalData(bot, data)
 		end
 	end
 
+	if data.MiniBoss then
+		bot.m_bIsMiniBoss = 1
+	else
+		bot.m_bIsMiniBoss = 0
+	end
+
 	if data.Display then
 		applyName(bot, data.Display, activeBuiltBotsOwner[bot:GetHandleIndex()])
 	end
@@ -603,7 +613,20 @@ local function startBotConstruction(owner, building, bot)
 		healthIncrement = 3
 	end
 
-	bot:AddCond(TF_COND_MVM_BOT_STUN_RADIOWAVE, 50000)
+	-- bot:AddCond(TF_COND_MVM_BOT_STUN_RADIOWAVE, 50000)
+	bot:StunPlayer(500000, 1, TF_STUNFLAG_NOSOUNDOREFFECT)
+
+	local teleParticle = ents.CreateWithKeys("info_particle_system", {
+		effect_name = bot.m_iTeamNum == TEAM_RED and "teleportedin_red" or "teleportedin_blue",
+		start_active = 1,
+		flag_as_weather = 0,
+	}, true, true)
+	teleParticle:SetAbsOrigin(bot:GetAbsOrigin())
+	teleParticle:Start()
+
+	timer.Simple(1, function ()
+		teleParticle:Remove()
+	end)
 
 	local constructionTimer
 	constructionTimer = timer.Create(0, function()
@@ -625,7 +648,7 @@ local function startBotConstruction(owner, building, bot)
 
 		if percent >= 1 then
 			timer.Stop(constructionTimer)
-			bot:RemoveCond(TF_COND_MVM_BOT_STUN_RADIOWAVE)
+			-- bot:RemoveCond(TF_COND_MVM_BOT_STUN_RADIOWAVE)
 			bot:RemoveCond(TF_COND_STUNNED)
 			building.m_bBuilding = 0
 			return
