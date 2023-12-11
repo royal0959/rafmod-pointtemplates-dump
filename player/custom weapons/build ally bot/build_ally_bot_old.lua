@@ -178,49 +178,49 @@ local PACK_ITEMS = {
 }
 -- delete cash dropped by bots that were built by players
 -- due to inheriting TFBot's currency count
-local function removeCashSafe(pack)
-	pack:SetAbsOrigin(Vector(0, -100000, 0))
-	local objectiveResource = ents.FindByClass("tf_objective_resource")
+-- local function removeCashSafe(pack)
+-- 	pack:SetAbsOrigin(Vector(0, -100000, 0))
+-- 	local objectiveResource = ents.FindByClass("tf_objective_resource")
 
-	local moneyBefore = objectiveResource.m_nMvMWorldMoney
-	pack:Remove()
-	local moneyAfter = objectiveResource.m_nMvMWorldMoney
+-- 	local moneyBefore = objectiveResource.m_nMvMWorldMoney
+-- 	pack:Remove()
+-- 	local moneyAfter = objectiveResource.m_nMvMWorldMoney
 
-	local packPrice = moneyBefore - moneyAfter
-	-- print("price: "..tostring(packPrice))
-	local mvmStats = ents.FindByClass("tf_mann_vs_machine_stats")
+-- 	local packPrice = moneyBefore - moneyAfter
+-- 	-- print("price: "..tostring(packPrice))
+-- 	local mvmStats = ents.FindByClass("tf_mann_vs_machine_stats")
 
-	local vscript =
-		'NetProps.SetPropInt(activator, "%s.nCreditsDropped", NetProps.GetPropInt(activator, "%s.nCreditsDropped") - %s)'
-	local curWave = "m_currentWaveStats"
-	mvmStats:RunScriptCode(vscript:format(curWave, curWave, packPrice), mvmStats, mvmStats)
-end
+-- 	local vscript =
+-- 		'NetProps.SetPropInt(activator, "%s.nCreditsDropped", NetProps.GetPropInt(activator, "%s.nCreditsDropped") - %s)'
+-- 	local curWave = "m_currentWaveStats"
+-- 	mvmStats:RunScriptCode(vscript:format(curWave, curWave, packPrice), mvmStats, mvmStats)
+-- end
 
-for _, packName in pairs(PACK_ITEMS) do
-	ents.AddCreateCallback(packName, function(pack)
-		local disablePickUp = pack:AddCallback(ON_SHOULD_COLLIDE, function()
-			return false
-		end)
-		timer.Simple(0, function()
-			-- failsafe for a glitch where spamming rebuild can very rarely drop cash
-			if not inWave then
-				removeCashSafe(pack)
-				return
-			end
+-- for _, packName in pairs(PACK_ITEMS) do
+-- 	ents.AddCreateCallback(packName, function(pack)
+-- 		local disablePickUp = pack:AddCallback(ON_SHOULD_COLLIDE, function()
+-- 			return false
+-- 		end)
+-- 		timer.Simple(0, function()
+-- 			-- failsafe for a glitch where spamming rebuild can very rarely drop cash
+-- 			if not inWave then
+-- 				removeCashSafe(pack)
+-- 				return
+-- 			end
 
-			local handle = pack.m_hOwnerEntity:GetHandleIndex()
+-- 			local handle = pack.m_hOwnerEntity:GetHandleIndex()
 
-			if not lingeringBuiltBots[handle] then
-				pack:RemoveCallback(disablePickUp)
-				return
-			end
+-- 			if not lingeringBuiltBots[handle] then
+-- 				pack:RemoveCallback(disablePickUp)
+-- 				return
+-- 			end
 
-			removeCashSafe(pack)
+-- 			removeCashSafe(pack)
 
-			lingeringBuiltBots[handle] = nil
-		end)
-	end)
-end
+-- 			lingeringBuiltBots[handle] = nil
+-- 		end)
+-- 	end)
+-- end
 
 function OnWaveInit()
 	inWave = false
@@ -554,23 +554,23 @@ local function setupBot(bot, owner, handle, building)
 	return callbacks
 end
 
--- local function findFreeBot()
--- 	local chosen
+local function findFreeBot()
+	local chosen
 
--- 	for _, bot in pairs(ents.GetAllPlayers()) do
--- 		if
--- 			not bot:IsRealPlayer()
--- 			and not bot:IsAlive()
--- 			and (bot.m_iTeamNum == 1 or bot.m_iTeamNum == 0)
--- 			and bot:GetPlayerName() ~= "Demo-Bot"
--- 		then
--- 			chosen = bot
--- 			break
--- 		end
--- 	end
+	for _, bot in pairs(ents.GetAllPlayers()) do
+		if
+			not bot:IsRealPlayer()
+			and not bot:IsAlive()
+			and (bot.m_iTeamNum == 1 or bot.m_iTeamNum == 0)
+			and bot:GetPlayerName() ~= "Demo-Bot"
+		then
+			chosen = bot
+			break
+		end
+	end
 
--- 	return chosen
--- end
+	return chosen
+end
 
 function TierPurchase(tier, activator)
 	tier = tier + 1
@@ -674,14 +674,7 @@ function SentrySpawned(_, building)
 		return
 	end
 
-	-- local botSpawn = findFreeBot()
-	local botSpawn = Entity("$tf_bot")--, {
-		-- ["$failspawnnoretry"] = 1,
-		-- ["$manualspawn"] = 1,
-		-- ["$spawnlimitname"] = tostring(handle)
-	-- })
-
-	-- botSpawn["$Spawn"](botSpawn)
+	local botSpawn = findFreeBot()
 
 	if not botSpawn then
 		owner:Print(PRINT_TARGET_CENTER, "GLOBAL BOT LIMIT REACHED")
