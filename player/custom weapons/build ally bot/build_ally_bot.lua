@@ -12,6 +12,7 @@ local BOTS_VARIANTS = {
 		Tiers = {
 			[2] = {
 				Display = "Direct Hit Soldier",
+				Model = "models/bots/soldier/bot_soldier.mdl",
 				Scale = 1.1,
 
 				Items = { "The Direct Hit", "Stainless Pot" },
@@ -24,6 +25,7 @@ local BOTS_VARIANTS = {
 			},
 			[3] = {
 				Display = "Burst Fire Soldier",
+				Model = "models/bots/soldier/bot_soldier.mdl",
 				Scale = 1.25,
 
 				Items = { "Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Armored Authority" },
@@ -45,6 +47,7 @@ local BOTS_VARIANTS = {
 			},
 			[4] = {
 				Display = "Rapid Fire Soldier",
+				Model = "models/bots/soldier/bot_soldier.mdl",
 				Scale = 1.55,
 
 				Items = { "Upgradeable TF_WEAPON_ROCKETLAUNCHER", "Soldier Drill Hat" },
@@ -675,11 +678,9 @@ function SentrySpawned(_, building)
 	end
 
 	-- local botSpawn = findFreeBot()
-	local botSpawn = Entity("$tf_bot")--, {
-		-- ["$failspawnnoretry"] = 1,
-		-- ["$manualspawn"] = 1,
-		-- ["$spawnlimitname"] = tostring(handle)
-	-- })
+	local botSpawn = ents.CreateWithKeys("$tf_bot", {
+		["$kickafterdeathdelay"] = 1,
+	})
 
 	-- botSpawn["$Spawn"](botSpawn)
 

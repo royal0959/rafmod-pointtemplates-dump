@@ -1,0 +1,66 @@
+prez
+{
+	LuaScriptFile "scripts/build_ally_bot.lua"
+
+	CustomWeapon
+	{
+		"Portable Robotic Companion" 
+		{
+			OriginalItemName "The Gunslinger"
+		}
+	}
+
+	ExtraLoadoutItems 
+	{
+		Engineer
+		{
+			Melee "Portable Robotic Companion" 
+		}
+	}
+
+	ExtendedUpgrades 
+	{
+		companion_upgrade
+		{
+			Name "Companion Hardware Upgrade"
+			Attribute "throwable fire speed"
+			Cap 5
+			Increment 1
+			Cost 300
+			Description "Upgrades bot type"
+			AllowedWeapons
+			{
+				ItemName "Portable Robotic Companion" 
+			}
+			OnApply
+			{
+				Output "popscript,$TierPurchase,,0"
+			}
+			OnDowngrade
+			{
+				Output "popscript,$TierPurchase,,0"
+			}
+		}
+	}
+
+	PointTemplates 
+	{
+		OnSentryBuild
+		{
+			OnSpawnOutput
+			{
+				Target "popscript"
+				Action "$SentrySpawned"
+				Delay 0.01
+			}
+		}
+	}
+
+	BuildingSpawnTemplate
+	{
+		ItemName "Portable Robotic Companion" 
+		Name OnSentryBuild
+		BuildingType "Sentry" 
+		Delay 0.1
+	}
+}
