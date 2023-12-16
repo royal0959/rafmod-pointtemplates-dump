@@ -24,7 +24,6 @@ local function hideLaser(laser, pointer)
 	end
 
 	laser:Stop()
-
 	laser:SetAbsOrigin(pointer:GetAbsOrigin())
 end
 
@@ -51,6 +50,9 @@ function LaserOnAim(_, activator)
 	for _, e in pairs({ laser, pointer, color }) do
 		e["$SetOwner"](e, activator)
 	end
+
+	laser.m_iClassname = "env_sprite"
+	pointer.m_iClassname = "env_sprite"
 
 	local callbacks = {}
 
@@ -92,7 +94,7 @@ function LaserOnAim(_, activator)
 			return
 		end
 
-		if activator:InCond(0) ~= 1 then
+		if not activator:InCond(0) then
 			if started then
 				hideLaser(laser, pointer)
 
@@ -133,15 +135,23 @@ function LaserOnAim(_, activator)
 end
 
 AddEventCallback("mvm_reset_stats", function ()
-	print("!!!RESTART!!!")
+	print("cleaning up leftover lasers")
 
-	PrintTable(ents.FindAllByName("le_laser*"))
 	for _, laser in pairs(ents.FindAllByName("le_laser*")) do
-		local ownerId = tostring(string.match(laser, "%d+"))
+		local ownerId = tostring(string.match(laser:GetName(), "%d+"))
 
 		local pointer = ents.FindByName("le_laserpointer" .. ownerId)
 
 		print(ownerId, pointer)
-		hideLaser(laser, pointer)
+		pcall(function ()
+			hideLaser(laser, pointer)
+		end)
+
+		timer.Simple(1, function()
+			laser:Remove()
+			if pointer and IsValid(pointer) then
+				pointer:Remove()
+			end
+		end)
 	end
 end)
