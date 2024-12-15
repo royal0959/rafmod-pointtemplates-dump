@@ -47,6 +47,10 @@ ents.AddCreateCallback("tf_projectile_*", function(ent)
 				return
 			end
 
+			if ent.m_bTouched == 1 then
+				return
+			end
+
 			for attributeName, func in pairs(ON_HIT_FUNCS) do
 				local param = melee:GetAttributeValue(attributeName, true)
 				if param then
