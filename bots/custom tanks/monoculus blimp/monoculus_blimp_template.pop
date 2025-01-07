@@ -3,25 +3,25 @@ WaveSchedule
 	Monoculus
 	{
 		SpawnTemplate Monoculus_Blimp
-		
-		DisableSmokestack 1  
+
+		DisableSmokestack 1
 		Classicon boss_eyeball
 		MaxTurnRate 0
 		// DestroyTemplate Monoculus_Death //randomly crashes :(
-		Model "models/empty.mdl" 
+		Model "models/empty.mdl"
 		StartSound "ui/halloween_boss_summoned_monoculus.wav"
 		PingSound "misc/null.wav"
 		EngineLoopSound "misc/null.wav"
 		TriggerDestroyBuildingFix 1
-		Gravity 0  
-		DisableTracks 1  
-		DisableChildModels 1  
+		Gravity 0
+		DisableTracks 1
+		DisableChildModels 1
 	}
 
 	PointTemplates
 	{
 		// modernized version of moonlight menace's monoculus blimp
-		Monoculus_Blimp
+			Monoculus_Blimp
 		{
 			OnSpawnOutput
 			{
@@ -29,6 +29,11 @@ WaveSchedule
 				Action "AddOutput"
 				Param "$OnUser5 monoculus_model:$RotateTowards:!activator:0:-1"
 				Delay 0.1
+			}
+			OnSpawnOutput
+			{
+				Target "popscript"
+				Action "$MonoculusDeathHandle"
 			}
 			OnSpawnOutput
 			{
@@ -66,14 +71,7 @@ WaveSchedule
 				Delay 5
 			}
 
-			filter_activator_tfteam 
-			{
-				"targetname" "filter_is_red"
-				"Negated" "0"
-				"TeamNum" "2"
-			}	
-			
-			logic_relay 
+			logic_relay
 			{
 				"targetname" "target_check"
 				"spawnflags" "2"
