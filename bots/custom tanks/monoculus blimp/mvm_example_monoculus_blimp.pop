@@ -9,8 +9,6 @@ tomboy
 	CanBotsAttackWhileInSpawnRoom no
 	RespawnWaveTime 0
 
-	LuaScriptFile "scripts/monoculus_blimp.lua"
-
 	ExtraSpawnPoint
 	{
 		Name "red"

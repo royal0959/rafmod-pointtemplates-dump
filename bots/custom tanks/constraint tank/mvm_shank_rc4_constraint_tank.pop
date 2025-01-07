@@ -1,0 +1,122 @@
+#base robot_standard.pop
+#base robot_giant.pop
+
+#base constraint_tank_template.pop
+
+tomboy
+{
+	StartingCurrency 1984
+	CanBotsAttackWhileInSpawnRoom no
+	RespawnWaveTime 0
+
+	ExtraTankPath
+	{
+		Name "monoculus"
+		Node "-458.2 -1219.1 550.0"
+		Node "39.4 1493.9 550.0"
+		Node "-2265.3 1658.1 550.0"
+		Node "-2375.6 5401.9 550.0"
+		Node "-3012.9 5417.1 550.0"
+	}
+
+	Wave
+	{
+		StartWaveOutput
+		{
+			Target wave_start_relay
+			Action Trigger
+		}
+		DoneOutput
+		{
+			Target wave_finished_relay
+			Action Trigger
+		}
+
+		WaveSpawn
+		{
+			Name "constraint"
+			TotalCount 1
+			MaxActive 1
+			SpawnCount 1
+			WaitBeforeStarting 0
+			WaitBetweenSpawns 0
+
+			TotalCurrency 0 //200
+
+			Tank
+			{
+				Name "tankboss"
+				StartingPathTrackNode "monoculus_1"
+
+				Template ConstraintTank
+
+				Health 10
+				Speed 75
+
+				OnBombDroppedOutput
+				{
+					Target boss_deploy_relay
+					Action Trigger
+				}
+			}
+		}
+
+		Wavespawn
+		{
+			Where spawnbot
+			TotalCount 1
+			MaxActive 1
+			SpawnCount 1
+			WaitBetweenSpawns 0
+			WaitBeforeStarting 0
+			TotalCurrency 0
+
+			TFBot
+			{
+				SpawnTemplate "Constraint_Bot_Init"
+
+				Template T_TFBot_Chief_Soldier
+				//Item "The B.A.S.E. Jumper"
+
+				Attributes AlwaysFireWeapon
+				MaxVisionRange 10000
+
+				ChangeAttributes
+				{
+				  Delay 0
+				  Name "OnTank"
+				}
+
+				CharacterAttributes
+				{
+				//"parachute disabled" 1
+				"health regen" 40
+				"move speed bonus" 0.5
+				"damage force reduction" 0.4
+				"airblast vulnerability multiplier" 0.4
+				"override footstep sound set" 3
+				"airblast vertical vulnerability multiplier" 0.1
+				"rage giving scale" 0.5
+				}
+
+				EventChangeAttributes
+				{
+					OnTank
+					{
+						Attributes AlwaysFireWeapon
+						MaxVisionRange 10000
+					}
+					Not
+					{
+						Item "The B.A.S.E. Jumper"
+					}
+				}
+
+				Health 42000
+
+				tag no_reprogram
+				tag constraint
+			}
+		}
+	}
+}

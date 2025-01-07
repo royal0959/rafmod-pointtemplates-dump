@@ -1,0 +1,98 @@
+WaveSchedule
+{
+	Templates
+	{
+		ConstraintTank
+		{
+			SpawnTemplate Constraint_Tank_Init
+
+			Health 15000
+			Speed 75
+			ClassIcon blimp2_lite
+			Model "models/bots/boss_bot/boss_blimp.mdl"
+			Skin 1
+			Gravity 0
+			DisableTracks 1
+			DisableChildModels 1
+			//taken from mobocracy
+			EngineLoopSound "npc\combine_gunship\dropship_engine_distant_loop1.wav"
+			PingSound "npc\combine_gunship\ping_search.wav"
+		}
+	}
+
+	PointTemplates
+	{
+		Constraint_Tank_Init
+		{
+			OnParentKilledOutput
+			{
+				Target "constraint_bot"
+				Action "$ChangeAttributes"
+				Param "Not"
+				Delay 0
+			}
+
+			// OnParentKilledOutput
+			// {
+			// 	Target "constraint_bot"
+			// 	Action "$GiveItem"
+			// 	Param "The B.A.S.E. Jumper"
+			// 	Delay 0
+			// }
+
+			OnParentKilledOutput
+			{
+				Target "constraint_bot"
+				Action "$AddCond"
+				Param "80"
+				Delay 0.2
+			}
+
+			filter_tf_bot_has_tag
+			{
+				"targetname" "filter_constraint"
+				"Negated" "0"
+				"require_all_tags" "1"
+				"tags" "constraint"
+			}
+
+			trigger_teleport
+			{
+				"targetname" "constraint_tank_teleport"
+				"origin" "0 0 0"
+				"landmark" "!activator"
+				"mins" "-50000.0 -50000.0 -50000.0"
+				"maxs" "50000.0 50000.0 50000.0"
+				"spawnflags" "1"
+				"filtername" "filter_constraint"
+				"target" "constraint_tank_position"
+			}
+
+			info_target
+			{
+				"targetname" "constraint_tank_position"
+
+				"origin" "0 0 250" //slightly above the tank
+			}
+		}
+
+		Constraint_Bot_Init
+		{
+			OnSpawnOutput
+			{
+				Target "!activator"
+				Action "AddOutput"
+				Param "targetname constraint_bot"
+				Delay 0
+			}
+
+			OnParentKilledOutput
+			{
+				Target "!activator"
+				Action "AddOutput"
+				Param "targetname "
+				Delay 0
+			}
+		}
+	}
+}
