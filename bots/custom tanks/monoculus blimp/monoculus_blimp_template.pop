@@ -1,28 +1,40 @@
 WaveSchedule
 {
-	Monoculus
-	{
-		SpawnTemplate Monoculus_Blimp
+	LuaScriptFile "scripts/monoculus_blimp.lua"
 
-		DisableSmokestack 1
-		Classicon boss_eyeball
-		MaxTurnRate 0
-		// DestroyTemplate Monoculus_Death //randomly crashes :(
-		Model "models/empty.mdl"
-		StartSound "ui/halloween_boss_summoned_monoculus.wav"
-		PingSound "misc/null.wav"
-		EngineLoopSound "misc/null.wav"
-		TriggerDestroyBuildingFix 1
-		Gravity 0
-		DisableTracks 1
-		DisableChildModels 1
+	Templates
+	{
+		Monoculus
+		{
+			SpawnTemplate Monoculus_Blimp
+
+			DisableSmokestack 1
+			Classicon boss_eyeball
+			MaxTurnRate 0
+			// DestroyTemplate Monoculus_Death //randomly crashes :(
+			Model "models/empty.mdl"
+			StartSound "ui/halloween_boss_summoned_monoculus.wav"
+			PingSound "misc/null.wav"
+			EngineLoopSound "misc/null.wav"
+			TriggerDestroyBuildingFix 1
+			Gravity 0
+			DisableTracks 1
+			DisableChildModels 1
+		}
 	}
 
 	PointTemplates
 	{
 		// modernized version of moonlight menace's monoculus blimp
-			Monoculus_Blimp
+		Monoculus_Blimp
 		{
+			OnSpawnOutput
+			{
+				Target "popscript"
+				Action "$MonoculusBlimpInit"
+				Delay 0.1
+			}
+
 			OnSpawnOutput
 			{
 				Target "!activator"
@@ -30,11 +42,7 @@ WaveSchedule
 				Param "$OnUser5 monoculus_model:$RotateTowards:!activator:0:-1"
 				Delay 0.1
 			}
-			OnSpawnOutput
-			{
-				Target "popscript"
-				Action "$MonoculusDeathHandle"
-			}
+
 			OnSpawnOutput
 			{
 				Target "!activator"
@@ -49,12 +57,13 @@ WaveSchedule
 				Param "$OnUser5"
 			}
 
+			// (royal): doesn't work anymore
 			OnSpawnOutput
 			{
 				Target "!activator"
 				Action "$SetCollisionFilter"
 				Param "filter_is_red"
-				Delay 0.1
+				Delay 1
 			}
 
 			OnSpawnOutput
@@ -69,6 +78,13 @@ WaveSchedule
 				Target "monoculus_firer"
 				Action "FireUser1"
 				Delay 5
+			}
+
+			filter_activator_tfteam
+			{
+				"targetname" "filter_is_red"
+				"Negated" "0"
+				"TeamNum" "2"
 			}
 
 			logic_relay
@@ -118,6 +134,7 @@ WaveSchedule
 				"OnUser1" "!self,FireUser1,,4,-1"
 
 				"$OnFire" "!activator,$SetModel,models/props_halloween/eyeball_projectile.mdl,0,-1"
+				"$OnFire" "!activator,$SetCollisionFilter,filter_is_red,-1,-1"
 			}
 
 			prop_dynamic

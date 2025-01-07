@@ -1,14 +1,15 @@
 #base robot_standard.pop
 #base robot_giant.pop
 
-#base whitecliff_of_dover_bots.pop
-#base whitecliff_of_dover_bot_logics.pop
+#base monoculus_blimp_template.pop
 
 tomboy
 {
 	StartingCurrency 1984
 	CanBotsAttackWhileInSpawnRoom no
 	RespawnWaveTime 0
+
+	LuaScriptFile "scripts/monoculus_blimp.lua"
 
 	ExtraSpawnPoint
 	{
