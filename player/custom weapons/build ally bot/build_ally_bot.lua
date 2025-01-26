@@ -552,6 +552,9 @@ local function setupBot(bot, owner, handle, building)
 		if IsValid(building) then
 			building:Remove()
 		end
+
+		-- remove $tf_bot
+		bot:Remove()
 	end)
 
 	return callbacks
@@ -678,9 +681,7 @@ function SentrySpawned(_, building)
 	end
 
 	-- local botSpawn = findFreeBot()
-	local botSpawn = ents.CreateWithKeys("$tf_bot", {
-		["$kickafterdeathdelay"] = 1,
-	})
+	local botSpawn = Entity("$tf_bot")
 
 	-- botSpawn["$Spawn"](botSpawn)
 
@@ -773,6 +774,8 @@ function SentrySpawned(_, building)
 		local cursorPos = Vector(0, 0, 0)
 
 		local lastWrangled = false
+
+		botSpawn["$kickafterdeathdelay"] = 1
 
 		-- bot behavior
 		-- default behavior is always following you
