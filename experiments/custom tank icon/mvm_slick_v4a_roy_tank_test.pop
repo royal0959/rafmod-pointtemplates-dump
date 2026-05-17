@@ -1,0 +1,107 @@
+#base	robot_standard.pop
+#base	robot_giant.pop
+#base	faketank_template.pop
+
+WaveSchedule
+{
+	StartingCurrency						1984
+	CanBotsAttackWhileInSpawnRoom			no
+	RespawnWaveTime							5
+	AddSentryBusterWhenDamageDealtExceeds	3000
+	AddSentryBusterWhenKillCountExceeds		15
+	Advanced								1
+	LuaScriptFile							scripts/faketank.lua [$SIGSEGV]
+
+	Wave	// Wave 1
+	{
+		StartWaveOutput
+		{
+			Target	wave_start_relay
+			Action	Trigger
+		}
+
+		DoneOutput
+		{
+			Target	wave_finished_relay
+			Action	Trigger
+		}
+
+		WaveSpawn
+		{
+			Name				le_tank
+			TotalCount			1
+			MaxActive			1
+			SpawnCount			1
+			WaitBeforeStarting	0
+			WaitBetweenSpawns	0
+			TotalCurrency		0
+
+			Tank
+			{
+				Name					tankboss1
+				StartingPathTrackNode	monoculus_1
+				SpawnTemplate			FakeTankInit [$SIGSEGV]
+				Health					1000
+				Scale					0.5 [$SIGSEGV]
+				Speed					75
+
+				OnBombDroppedOutput
+				{
+					Target	boss_deploy_relay
+					Action	Trigger
+				}
+			}
+		}
+
+		WaveSpawn
+		{
+			Where				spawnbot
+			Name				le_tank_holder
+			TotalCount			1
+			MaxActive			1
+			SpawnCount			1
+			WaitBeforeStarting	0.2
+			WaitBetweenSpawns	0
+			TotalCurrency		0
+
+			TFBot
+			{
+				Class		Scout
+				Attributes	UseBossHealthBar
+				Attributes	MiniBoss
+				Tag			TankHealthBar_tankboss1
+				ClassIcon	tank_vac_trio_lite
+
+				AddCond [$SIGSEGV]
+				{
+					Index	52
+				}
+
+				AddCond [$SIGSEGV]
+				{
+					Index	64
+					//not targeted by red bot
+				}
+				Scale		0.1
+
+				CharacterAttributes
+				{
+					"move speed penalty"				0.0001
+					"not solid to players"				1
+					"voice pitch scale"					0
+					"move speed bonus"					0.8
+					no_jump								1
+					no_attack							1
+					"damage force reduction"			0.001
+					"airblast pushback scale"			0.0001
+					"airblast vertical pushback scale"	0.0001
+					"dmg from ranged reduced"			0
+					"dmg from melee increased"			0
+					"cannot be backstabbed"				1
+					"cannot pick up intelligence"		1
+					"crit mod disabled"					0
+				}
+			}
+		}
+	}
+}

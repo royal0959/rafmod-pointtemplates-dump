@@ -1,0 +1,51 @@
+WaveSchedule
+{
+	PointTemplates [$SIGSEGV]
+	{
+		FakeTankInit
+		{
+			OnSpawnOutput
+			{
+				Target	popscript
+				Action	$ApplyFakeTank
+				Delay	0.1
+			}
+
+			OnSpawnOutput
+			{
+				Target	@c@!activator
+				Action	$HideToAll
+				Delay	0.1
+			}
+
+			OnSpawnOutput
+			{
+				Target	!activator
+				Action	$HideToAll
+				Delay	0.1
+			}
+			// OnSpawnOutput
+			// {
+			// 	Target	faketank_model
+			// 	Action	SetParent
+			// 	Param	""
+			// 	Delay	0.1
+			// }
+			// prop_dynamic
+			// {
+			// 	targetname		faketank_model
+			// 	model			models\bots\boss_bot\boss_tank.mdl
+			// 	origin			"0 0 0"
+			// 	angles			"0 0 0"
+			// 	DefaultAnim		general_noise
+			// 	solid			0
+			// 	$modules		rotator
+			// 	$positiononly	1
+			// 	$rotationspeedx	500
+			// 	$rotationspeedy	500
+			// 	$rotationspeedz	500
+			// 	// OnUser1			!self,SetAnimation,firing3,0,-1
+			// }
+		}
+	}
+}
