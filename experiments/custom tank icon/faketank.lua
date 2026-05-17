@@ -12,7 +12,10 @@ function ApplyFakeTank(_, tank)
 	}, true, true)
 	fakeTankModel:SetFakeParent(tank)
 
-	tanksWaitingForHealthBars[tank:GetName()] = tank
+	tanksWaitingForHealthBars[tank:GetName()] = {
+		TankEntity = tank,
+		FakeModel = fakeTankModel,
+	}
 end
 
 function OnWaveSpawnBot(bot, wave, tags)
@@ -26,8 +29,10 @@ function OnWaveSpawnBot(bot, wave, tags)
 		if split[1]:lower() == "tankhealthbar" then
 			local tankTargetname = split[2]
 
-			local tankEnt = tanksWaitingForHealthBars[tankTargetname]
-			if tankEnt then
+			local tankInfo = tanksWaitingForHealthBars[tankTargetname]
+			if tankInfo then
+				local tankEnt = tankInfo.TankEntity
+
 				local maxHealth = tankEnt.m_iHealth
 
 				timer.Simple(1, function()
@@ -43,6 +48,7 @@ function OnWaveSpawnBot(bot, wave, tags)
 
 				tankEnt:AddCallback(ON_REMOVE, function()
 					bot:Suicide()
+					tankInfo.FakeModel:Remove()
 				end)
 			else
 				print("COULD NOT FIND A VALID PAIRING TANK WITH TARGETNAME" .. tankTargetname)
