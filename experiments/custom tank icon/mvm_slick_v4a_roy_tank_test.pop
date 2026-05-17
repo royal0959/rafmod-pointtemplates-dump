@@ -91,7 +91,6 @@ WaveSchedule
 					"move speed penalty"				0.0001
 					"not solid to players"				1
 					"voice pitch scale"					0
-					"move speed bonus"					0.8
 					no_jump								1
 					no_attack							1
 					"damage force reduction"			0.001

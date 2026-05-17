@@ -1,7 +1,7 @@
 local tanksWaitingForHealthBars = {}
 
 function ApplyFakeTank(_, tank)
-	print("tank spawned (v6)")
+	print("tank spawned (v8)")
 	print(tank)
 
 	local fakeTankModel = ents.CreateWithKeys("prop_dynamic", {
@@ -10,11 +10,23 @@ function ApplyFakeTank(_, tank)
 		solid = 0,
 		skin = 1,
 	}, true, true)
+	fakeTankModel:SetAbsOrigin(tank:GetAbsOrigin())
 	fakeTankModel:SetFakeParent(tank)
+
+	local damageHolderBuilding = ents.CreateWithKeys("obj_dispenser", {
+		TeamNum = tank.m_iTeamNum,
+
+		["$positiononly"] = 1,
+	})
+
+	damageHolderBuilding:SetHealth(100000)
+	damageHolderBuilding:Disable()
+	damageHolderBuilding:SetFakeParent(tank)
 
 	tanksWaitingForHealthBars[tank:GetName()] = {
 		TankEntity = tank,
 		FakeModel = fakeTankModel,
+		DamageHolder = damageHolderBuilding,
 	}
 end
 
@@ -36,19 +48,23 @@ function OnWaveSpawnBot(bot, wave, tags)
 				local maxHealth = tankEnt.m_iHealth
 
 				timer.Simple(1, function()
-					print("setting new max health" .. tostring(maxHealth - bot.m_iMaxHealth))
 					bot.m_iHealth = tankEnt.m_iHealth
 					bot:SetAttributeValue("hidden maxhealth non buffed", maxHealth - bot.m_iMaxHealth)
 				end)
 
 				tankEnt:AddCallback(ON_DAMAGE_RECEIVED_POST, function(_, damageInfo)
-					print("new health" .. tankEnt.m_iHealth)
 					bot.m_iHealth = tankEnt.m_iHealth
+
+					-- show damage indicator
+					local damageHolder = tankInfo.DamageHolder
+					damageHolder:TakeDamage(damageInfo)
+					damageHolder:SetHealth(100000)
 				end)
 
 				tankEnt:AddCallback(ON_REMOVE, function()
 					bot:Suicide()
 					tankInfo.FakeModel:Remove()
+					tankInfo.DamageHolder:Remove()
 				end)
 			else
 				print("COULD NOT FIND A VALID PAIRING TANK WITH TARGETNAME" .. tankTargetname)

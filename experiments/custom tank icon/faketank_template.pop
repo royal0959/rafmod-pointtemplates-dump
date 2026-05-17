@@ -8,21 +8,21 @@ WaveSchedule
 			{
 				Target	popscript
 				Action	$ApplyFakeTank
-				Delay	0.1
+				Delay	0
 			}
 
 			OnSpawnOutput
 			{
 				Target	@c@!activator
 				Action	$HideToAll
-				Delay	0.1
+				Delay	0
 			}
 
 			OnSpawnOutput
 			{
 				Target	!activator
 				Action	$HideToAll
-				Delay	0.1
+				Delay	0
 			}
 			// OnSpawnOutput
 			// {
